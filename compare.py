@@ -1,5 +1,6 @@
 import os
 import subprocess
+import functions
 
 # Define directories:
 #    BASE_DIR: this script;
