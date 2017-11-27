@@ -1,7 +1,8 @@
 import os
 import subprocess
 import argparse
-import functions
+import functions as fs
+import numpy as np
 
 
 
@@ -10,6 +11,7 @@ parser = argparse.ArgumentParser("Compare the output of two different versions o
 parser.add_argument("input_file", type=str, help="Input file with values (or range of values) for each parameter")
 parser.add_argument("class_v1", type=str, help="Folder with the first version of (hi_)class")
 parser.add_argument("class_v2", type=str, help="Folder with the second version of (hi_)class")
+parser.add_argument("-N", type=int, default=1, help="Number of executions of the code (default = 1)")
 args = parser.parse_args()
 
 #Define directories:
@@ -27,6 +29,12 @@ OUTPUT_DIR = BASE_DIR + 'output/'
 
 
 
+for i in np.arange(args.N):
+    
+    #Read inpunt file and generate a dictionary with the parameters
+    params = fs.read_ini_file(BASE_DIR + args.input_file)
+    
+    print params
 
 
 #List of task that this code has to do:
