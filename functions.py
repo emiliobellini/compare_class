@@ -111,14 +111,12 @@ def create_ini_file(v, params, output_dir):
     """ Write the parameter file
 
     Args:
-        new_ini: path to the new ini file.
-        params_1: first dictionary of parameters.
-        params_2: second optional dictionary of parameters.
+        v: dictionary containing properties of each version of class.
+        params: dictionary of the common parameters.
         output_dir: relative path to the folder where to store the ini file and the outputs.
-        base_dir: folder containing this script.
 
     Returns:
-        path of the init_file.
+        None.
 
     """
     
@@ -137,4 +135,20 @@ def create_ini_file(v, params, output_dir):
         for k in params.keys():
             f.write(str(k) + ' = ' + str(params[k]) + '\n')
     
-    return 
+    return
+
+def run_class(v):
+    """ Run the current version of class
+
+    Args:
+        v: dictionary containing properties of each version of class.
+
+    Returns:
+        None.
+
+    """
+    import subprocess
+    
+    subprocess.call([v['root'] + 'class', v['ini_path']])
+    
+    return

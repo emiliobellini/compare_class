@@ -1,5 +1,4 @@
-import os
-import subprocess
+import os, sys
 import argparse
 import functions as fs
 import numpy as np
@@ -103,6 +102,8 @@ for i in np.arange(args.N):
             pass
         #Create ini file for class
         fs.create_ini_file(v, common_params, OUTPUT_TMP)
+        #Run class
+        fs.run_class(v)
 
 
 #    print new_ini
@@ -110,12 +111,10 @@ for i in np.arange(args.N):
 
 
 #List of task that this code has to do:
-#   1 - Import a file with the values/ranges of the parameters
-#   2 - Generate a single ini file
-#   3 - Run the two versions of class for the same ini file
 #   4 - Compare the outputs
 #   5 - Write a line in a table with the values of the parameters and the relative differences
 #   6 - If the agreement is not good keep the ini file
 
 
-#subprocess.call([CLASS_V1_DIR + 'class', INPUT_DIR + 'hi_class.ini'])
+
+sys.exit()
