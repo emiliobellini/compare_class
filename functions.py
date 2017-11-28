@@ -161,7 +161,8 @@ def find_common_output(v1, v2, files_to_compare, dir_files):
     """ Find the common files in the output folder
 
     Args:
-        v: dictionary containing properties of each version of class.
+        v1: dictionary containing properties of the first version of class.
+        v2: dictionary containing properties of the second version of class.
         files_to_compare: name of the files to compare.
         dir_files: files in the output folder.
 
@@ -182,3 +183,51 @@ def find_common_output(v1, v2, files_to_compare, dir_files):
                 seen.add(co)
     
     return common_output
+
+
+
+def import_output(v, common_output, output_dir):
+    """ Find the common files in the output folder
+
+    Args:
+        v: dictionary containing properties of each version of class.
+        common_output: suffix of the files to compare.
+        output_dir: path of the output folder.
+
+    Returns:
+        Dictionary with all the output of each file.
+
+    """
+    
+    import numpy as np
+    
+    for co in common_output:
+        v['output'][co] = {}
+        
+        #Set the name and the path of the file
+        output_file = output_dir + v['ini_name'] + '_' + co + '.dat'
+        #Open the file and read the values
+        content = np.genfromtxt(output_file)
+        #Transpose table
+        content = content.transpose()
+        #Open the file and read the header
+        with open(output_file, 'r') as f:
+            #Read each line
+            headers = f.read().splitlines()
+            #Select only lines that start with #
+            headers = [x for x in headers if x[0] == '#']
+            #Select only the last line with # (it is the line containing the headers)
+            headers = headers[-1][1:]
+            #Manipulate headers to get something readable
+            headers = headers[1:].split('  ')
+            headers = [x for x in headers if x !='']
+            headers = [x for x in headers if x !=' ']
+            headers = [x.strip(' ') for x in headers]
+            headers = [x.split(':')[-1] for x in headers]
+            
+        #Create dictionary with the variables associated to their values
+        for i in range(len(headers)):
+            v['output'][co][headers[i]] = content[i]
+        
+
+    return

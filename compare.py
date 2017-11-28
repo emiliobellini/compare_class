@@ -3,8 +3,9 @@ import argparse
 import functions as fs
 import numpy as np
 
-#Files to compare
+#Files to compare and independent variables for each file
 COMPARED_FILES = ['background', 'cl', 'pk']
+INDEPENDENT_VARIABLES = {'background': 'z', 'cl': 'l', 'pk': 'k (h/Mpc)'}
 
 
 # Parse the given arguments
@@ -111,12 +112,13 @@ for i in np.arange(args.N):
     #Find the common outputs of the two class runs
     common_output = fs.find_common_output(class_v1, class_v2, COMPARED_FILES, os.listdir(OUTPUT_TMP))
     
+    #Import the output for each version of class and store it in a dictionary
+    for v in [class_v1, class_v2]:
+        v['output'] = {}
+        fs.import_output(v, common_output, OUTPUT_TMP)
     
-    print common_output
+    print class_v1['output']['cl']
 
-
-#    print new_ini
-#    print var_params
 
 
 #List of task that this code has to do:
