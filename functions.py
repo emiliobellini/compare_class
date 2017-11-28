@@ -137,6 +137,8 @@ def create_ini_file(v, params, output_dir):
     
     return
 
+
+
 def run_class(v):
     """ Run the current version of class
 
@@ -152,3 +154,31 @@ def run_class(v):
     subprocess.call([v['root'] + 'class', v['ini_path']])
     
     return
+
+
+
+def find_common_output(v1, v2, files_to_compare, dir_files):
+    """ Find the common files in the output folder
+
+    Args:
+        v: dictionary containing properties of each version of class.
+        files_to_compare: name of the files to compare.
+        dir_files: files in the output folder.
+
+    Returns:
+        List of common files.
+
+    """
+    
+    common_output = []
+    seen = set()
+    for co in dir_files:
+        co = co.split('.')[0]
+        co = co.replace(v1['ini_name'] + '_', '')
+        co = co.replace(v2['ini_name'] + '_', '')
+        if co in files_to_compare:
+            if co not in seen:
+                common_output.append(co)
+                seen.add(co)
+    
+    return common_output

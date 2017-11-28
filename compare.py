@@ -3,6 +3,8 @@ import argparse
 import functions as fs
 import numpy as np
 
+#Files to compare
+COMPARED_FILES = ['background', 'cl', 'pk']
 
 
 # Parse the given arguments
@@ -22,8 +24,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__)) + '/'
 #Define dictionaries for the different versions of class
 class_v1 = {}
 class_v2 = {}
-class_v1['name'] = 'v1'
-class_v2['name'] = 'v2'
+class_v1['class_name'] = 'v1'
+class_v2['class_name'] = 'v2'
 
 #Read input file and generate two dictionaries containing the fixed and the varying parameters
 fix_params, var_params = fs.read_ini_file(BASE_DIR + args.input_file)
@@ -94,7 +96,8 @@ for i in np.arange(args.N):
     #Cycle over the different versions of class to generate the ini file and execute class
     for v in [class_v1, class_v2]:
         #Name and path of the new ini file
-        v['ini_path'] = BASE_DIR + OUTPUT_DIR + args.input_file.split('.')[0] + '_' + v['name'] + '.ini'
+        v['ini_name'] = args.input_file.split('.')[0] + '_' + v['class_name']
+        v['ini_path'] = BASE_DIR + OUTPUT_DIR + v['ini_name'] + '.ini'
         #Try to remove the file if already existing
         try:
             os.remove(v['ini_path'])
@@ -102,8 +105,14 @@ for i in np.arange(args.N):
             pass
         #Create ini file for class
         fs.create_ini_file(v, common_params, OUTPUT_TMP)
-        #Run class
-        fs.run_class(v)
+        #Run class (TODO: uncomment the following line)
+        #fs.run_class(v)
+    
+    #Find the common outputs of the two class runs
+    common_output = fs.find_common_output(class_v1, class_v2, COMPARED_FILES, os.listdir(OUTPUT_TMP))
+    
+    
+    print common_output
 
 
 #    print new_ini
