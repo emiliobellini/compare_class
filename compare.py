@@ -3,9 +3,10 @@ import argparse
 import numpy as np
 import functions as fs
 
-#Files to compare and independent variables for each file
+#Files to compare, independent variables for each file and allowed percentage differences in the comparison
 COMPARED_FILES = ['background', 'cl', 'pk']
 INDEPENDENT_VARIABLES = {'background': 'z', 'cl': 'l', 'pk': 'k (h/Mpc)'}
+ALLOWED_PERCENTAGE_DIFFS = {'background': 1., 'cl': 1., 'pk': 1.}
 
 
 # Parse the given arguments
@@ -81,13 +82,21 @@ except:
 
 
 
-
+#Definition of the dictionaries containing the values of the input and output parameters
+input_params = {}
+output_params = {}
 
 
 for i in np.arange(args.N):
 
     #Generate random values for all the varying parameters
     model_params = fs.generate_random(var_params)
+    #Construct the dictionary that stores all the input values
+    for k in model_params.keys():
+        if k in input_params.keys():
+            input_params[k].append(model_params[k])
+        else:
+            input_params[k] = [model_params[k]]
 
     #Group parameters together to respect the (hi_)class syntax
     common_params = fs.group_parameters(fix_params, model_params)
@@ -106,8 +115,8 @@ for i in np.arange(args.N):
             pass
         #Create ini file for class
         fs.create_ini_file(v, common_params, OUTPUT_TMP)
-        #Run class (TODO: uncomment the following line)
-        #fs.run_class(v)
+        #Run class
+        fs.run_class(v)
     
     #Find the common outputs of the two class runs
     common_output = fs.find_common_output(class_v1, class_v2, COMPARED_FILES, os.listdir(OUTPUT_TMP))
@@ -122,24 +131,63 @@ for i in np.arange(args.N):
     
     #Calculate the max percentage difference for each variable of each file
     for co in common_output:
-        percentage_diffs[co] = {}
         #Determine what are the common dependent variables for each file
         common_vars = [x for x in class_v1['output'][co] if x in class_v2['output'][co]]
         common_vars = [x for x in common_vars if x != INDEPENDENT_VARIABLES[co]]
         #Iterate over the common_vars to calculate the relative differences (except for the independent one)
         for var in common_vars:
-            percentage_diffs[co][var] = fs.return_max_percentage_diff(
+            percentage_diffs[co + ':' + var] = fs.return_max_percentage_diff(
             class_v1['output'][co][INDEPENDENT_VARIABLES[co]], class_v1['output'][co][var], 
             class_v2['output'][co][INDEPENDENT_VARIABLES[co]], class_v2['output'][co][var])
+    
+    #Construct the dictionary that stores all the output values
+    for k in percentage_diffs.keys():
+        if k in output_params.keys():
+            output_params[k].append(percentage_diffs[k])
+        else:
+            output_params[k] = [percentage_diffs[k]]
+    
+    #Decides if the percentage differences are negligible or it has to store the ini file
+    KEEP_INI_FILES = False
+    for k in percentage_diffs.keys():
+        for co in common_output:
+            if co in k:
+                if percentage_diffs[k] > ALLOWED_PERCENTAGE_DIFFS[co]:
+                    KEEP_INI_FILES = True
+    #Move the file in the ini directory
+    if KEEP_INI_FILES:
+        for v in [class_v1, class_v2]:
+            new_ini_path = OUTPUT_PROBLEMATIC_INI + v['ini_name'] + '_' + str(args.N) + '.ini'
+            os.rename(v['ini_path'], new_ini_path)
+    
+    #Remove tmp output files
+    for file in os.listdir(OUTPUT_TMP):
+        os.remove(OUTPUT_TMP + file)
 
-#    print percentage_diffs
 
 
 
-#List of task that this code has to do:
-#   5 - Write a line in a table with the values of the parameters and the relative differences
-#   6 - If the agreement is not good keep the ini file
 
+#Name for the output file
+output_file = BASE_DIR + OUTPUT_DIR + args.input_file.split('.')[0] + '_output.dat'
 
+#Create an ordered list of parameters (before input and then output)
+OUTPUT_ORDERED = input_params.keys() + output_params.keys()
+
+#Create array with values of OUTPUT_ORDERED
+params = {}
+params.update(input_params)
+params.update(output_params)
+
+#Create output array
+output_array = np.empty([len(params[OUTPUT_ORDERED[0]]), len(OUTPUT_ORDERED)])
+for i in range(len(OUTPUT_ORDERED)):
+    for j in range(len(params[OUTPUT_ORDERED[i]])):
+        output_array[j][i] = params[OUTPUT_ORDERED[i]][j]
+
+#Write output file
+with open(output_file, "w") as f:
+    f.write('#' + '       '.join(OUTPUT_ORDERED) + '\n')
+    np.savetxt(f, output_array, delimiter = '       ', fmt='%10.5e')
 
 sys.exit()
