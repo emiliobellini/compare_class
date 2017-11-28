@@ -107,7 +107,7 @@ def group_parameters(params_1, params_2):
 
 
 
-def create_ini_file(params, output_dir):
+def create_ini_file(params_1, params_2, output_dir):
     """ Write the parameter file
 
     Args:

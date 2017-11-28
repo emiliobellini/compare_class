@@ -50,6 +50,25 @@ if args.output_dir is None:
 else:
     OUTPUT_DIR = BASE_DIR + args.output_dir
 
+#Folder containing all the problematic init files
+OUTPUT_PROBLEMATIC_INI = OUTPUT_DIR + 'problematic_ini/'
+#Folder containing the temporary output generated at each run
+OUTPUT_TMP = OUTPUT_DIR + 'tmp/'
+
+#Generate folder structure
+try:
+    os.mkdir(OUTPUT_DIR)
+except:
+    pass
+try:
+    os.mkdir(OUTPUT_PROBLEMATIC_INI)
+except:
+    pass
+try:
+    os.mkdir(OUTPUT_TMP)
+except:
+    pass
+
 
 
 #Remove directories of class_v1 and class_v2 from the list of parameters
@@ -63,9 +82,13 @@ for i in np.arange(args.N):
     #Generate random values for all the varying parameters
     model_params = fs.generate_random(var_params)
     
-    fs.group_parameters(fix_params, model_params)
+    #Group parameters together to respect the (hi_)class syntax
+    common_params = fs.group_parameters(fix_params, model_params)
     
-#    print fix_params
+    #Create ini file for class_v1 and 
+#    ini_folder_v1 = fs.create_ini_file(common_params, params_class_v1, OUTPUT_DIR)
+    
+#    print common_params
 #    print var_params
 
 
