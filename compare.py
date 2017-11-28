@@ -1,7 +1,7 @@
 import os, sys
 import argparse
-import functions as fs
 import numpy as np
+import functions as fs
 
 #Files to compare and independent variables for each file
 COMPARED_FILES = ['background', 'cl', 'pk']
@@ -117,12 +117,26 @@ for i in np.arange(args.N):
         v['output'] = {}
         fs.import_output(v, common_output, OUTPUT_TMP)
     
-    print class_v1['output']['cl']
+    #Initialise the variable that will contain the relative differences
+    percentage_diffs = {}
+    
+    #Calculate the max percentage difference for each variable of each file
+    for co in common_output:
+        percentage_diffs[co] = {}
+        #Determine what are the common dependent variables for each file
+        common_vars = [x for x in class_v1['output'][co] if x in class_v2['output'][co]]
+        common_vars = [x for x in common_vars if x != INDEPENDENT_VARIABLES[co]]
+        #Iterate over the common_vars to calculate the relative differences (except for the independent one)
+        for var in common_vars:
+            percentage_diffs[co][var] = fs.return_max_percentage_diff(
+            class_v1['output'][co][INDEPENDENT_VARIABLES[co]], class_v1['output'][co][var], 
+            class_v2['output'][co][INDEPENDENT_VARIABLES[co]], class_v2['output'][co][var])
+
+#    print percentage_diffs
 
 
 
 #List of task that this code has to do:
-#   4 - Compare the outputs
 #   5 - Write a line in a table with the values of the parameters and the relative differences
 #   6 - If the agreement is not good keep the ini file
 

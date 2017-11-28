@@ -231,3 +231,42 @@ def import_output(v, common_output, output_dir):
         
 
     return
+
+
+
+def return_max_percentage_diff(x1, y1, x2, y2):
+    """ Return the max percentage difference for each variable of a file
+
+    Args:
+        x1: array containing the values of the independend variable of class_v1.
+        y1: array containing the values of the dependend variable of class_v1.
+        x2: array containing the values of the independend variable of class_v2.
+        y2: array containing the values of the dependend variable of class_v2.
+
+    Returns:
+        The maximum percentage difference between the two outputs.
+
+    """
+    
+    import numpy as np
+    from scipy import interpolate
+    
+    #Compute the minimum and maximum values of x
+    xmin = max(min(x1),min(x2))
+    xmax = min(max(x1),max(x2))
+    
+    #Interpolate linearly for [x1, y1] and [x2, y2]. Then we will calculate
+    #the diffs w.r.t. the points of [x1, y1]
+    data1 = interpolate.interp1d(x1,y1)
+    data2 = interpolate.interp1d(x2,y2)
+    
+    #Initialise max_diff to 0.
+    max_diff = 0.
+    #Calculate the relative difference
+    therange = [x for x in x1 if xmin<=x<=xmax]
+    for x in therange:
+        diff = np.fabs(data2(x)/data1(x)-1.)
+        if diff > max_diff:
+            max_diff = diff
+    
+    return 100*max_diff
