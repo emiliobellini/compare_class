@@ -29,12 +29,16 @@ OUTPUT_DIR = BASE_DIR + 'output/'
 
 
 
+#Read input file and generate two dictionaries containing the fixed and the varying parameters
+fix_params, var_params = fs.read_ini_file(BASE_DIR + args.input_file)
+
+
+
 for i in np.arange(args.N):
     
-    #Read input file and generate two dictionaries containing the fixed and the varying parameters
-    fix_params, var_params = fs.read_ini_file(BASE_DIR + args.input_file)
+    model_params = fs.generate_random(var_params)
     
-    print fs.generate_random(var_params)
+    print fs.group_parameters(fix_params, model_params)
     
 #    print fix_params
 #    print var_params
