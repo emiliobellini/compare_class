@@ -20,35 +20,43 @@ args = parser.parse_args()
 #Define working directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) + '/'
 
-
+#Define dictionaries for the different versions of class
+class_v1 = {}
+class_v2 = {}
+class_v1['name'] = 'v1'
+class_v2['name'] = 'v2'
 
 #Read input file and generate two dictionaries containing the fixed and the varying parameters
 fix_params, var_params = fs.read_ini_file(BASE_DIR + args.input_file)
 #Read optional input file for class-v1 and generate a dictionary with its parameters
 if args.p_class_v1 is None:
-    params_class_v1 = {}
+    class_v1['params'] = {}
 else:
-    params_class_v1, _ = fs.read_ini_file(BASE_DIR + args.p_class_v1)
+    class_v1['params'], _ = fs.read_ini_file(BASE_DIR + args.p_class_v1)
 #Read optional input file for class-v1 and generate a dictionary with its parameters
 if args.p_class_v2 is None:
-    params_class_v2 = {}
+    class_v2['params'] = {}
 else:
-    params_class_v2, _ = fs.read_ini_file(BASE_DIR + args.p_class_v2)
+    class_v2['params'], _ = fs.read_ini_file(BASE_DIR + args.p_class_v2)
 
 
 
 #Define directories:
-#    CLASS_V1_DIR : first version of class to compare;
-#    CLASS_V2_DIR : second version of class to compare;
-#    OUTPUT_DIR : stores the output files
+#    class_v1['root'] : folder of the first version of class to compare;
+#    class_v2['root'] : folder of the second version of class to compare;
+#    OUTPUT_DIR : relative (to BASE_DIR) path where to store the output files
 
-CLASS_V1_DIR = BASE_DIR + fix_params['root_class_v1']
-CLASS_V2_DIR = BASE_DIR + fix_params['root_class_v2']
+class_v1['root'] = BASE_DIR + fix_params['root_class_v1']
+class_v2['root'] = BASE_DIR + fix_params['root_class_v2']
+#Remove directories of class_v1 and class_v2 from the list of parameters
+fix_params.pop('root_class_v1', None)
+fix_params.pop('root_class_v2', None)
 
+#Read the output directory
 if args.output_dir is None:
-    OUTPUT_DIR = BASE_DIR + 'output/'
+    OUTPUT_DIR = 'output/'
 else:
-    OUTPUT_DIR = BASE_DIR + args.output_dir
+    OUTPUT_DIR = args.output_dir
 
 #Folder containing all the problematic init files
 OUTPUT_PROBLEMATIC_INI = OUTPUT_DIR + 'problematic_ini/'
@@ -71,24 +79,33 @@ except:
 
 
 
-#Remove directories of class_v1 and class_v2 from the list of parameters
-fix_params.pop('root_class_v1', None)
-fix_params.pop('root_class_v2', None)
 
 
 
 for i in np.arange(args.N):
-    
+
     #Generate random values for all the varying parameters
     model_params = fs.generate_random(var_params)
-    
+
     #Group parameters together to respect the (hi_)class syntax
     common_params = fs.group_parameters(fix_params, model_params)
-    
-    #Create ini file for class_v1 and 
-#    ini_folder_v1 = fs.create_ini_file(common_params, params_class_v1, OUTPUT_DIR)
-    
-#    print common_params
+
+
+
+    #Cycle over the different versions of class to generate the ini file and execute class
+    for v in [class_v1, class_v2]:
+        #Name and path of the new ini file
+        v['ini_path'] = BASE_DIR + OUTPUT_DIR + args.input_file.split('.')[0] + '_' + v['name'] + '.ini'
+        #Try to remove the file if already existing
+        try:
+            os.remove(v['ini_path'])
+        except:
+            pass
+        #Create ini file for class
+        fs.create_ini_file(v, common_params, OUTPUT_TMP)
+
+
+#    print new_ini
 #    print var_params
 
 

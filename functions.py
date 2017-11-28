@@ -107,22 +107,34 @@ def group_parameters(params_1, params_2):
 
 
 
-def create_ini_file(params_1, params_2, output_dir):
+def create_ini_file(v, params, output_dir):
     """ Write the parameter file
 
     Args:
-        input_file: path to the input_file.
-        init_dir: folder where to store the init_file.
-        output_dir: folder where to store the output of the init_file.
+        new_ini: path to the new ini file.
+        params_1: first dictionary of parameters.
+        params_2: second optional dictionary of parameters.
+        output_dir: relative path to the folder where to store the ini file and the outputs.
+        base_dir: folder containing this script.
 
     Returns:
         path of the init_file.
 
     """
     
-    #Open and read the input_file
-    f= read_ini_file(input_file)
+    #Merge the two dictionaries
+    params = params.copy()
+    params.update(v['params'])
+    
+    #Add root for the output (it is the relative path w.r.t. base_dir)
+    output_name = v['ini_path'].split('/')[-1]
+    output_name = output_name.split('.')[0]
+    params['root'] = output_dir + output_name + '_'
     
     
+    #Create the file
+    with open(v['ini_path'], 'w') as f:
+        for k in params.keys():
+            f.write(str(k) + ' = ' + str(params[k]) + '\n')
     
-    return input_file
+    return 
