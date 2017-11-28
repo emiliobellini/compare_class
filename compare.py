@@ -34,8 +34,10 @@ for i in np.arange(args.N):
     #Read input file and generate two dictionaries containing the fixed and the varying parameters
     fix_params, var_params = fs.read_ini_file(BASE_DIR + args.input_file)
     
-    print fix_params
-    print var_params
+    print fs.generate_random(var_params)
+    
+#    print fix_params
+#    print var_params
 
 
 #List of task that this code has to do:

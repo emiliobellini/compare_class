@@ -40,6 +40,47 @@ def read_ini_file(input_file):
     return fix_params, var_params
 
 
+def generate_random(params):
+    """ Generate random values from ranges
+
+    Args:
+        params: dictionary with varying parameters.
+
+    Returns:
+        new_params: new dictionary with random numbers instead of ranges
+    """
+    
+    new_params = {}
+    for k in params.keys():
+        val = params[k]
+        val = val.split(",")
+        try:
+            #Try to generate a random number in the range
+            x_min = float(val[0])
+            x_max = float(val[1])
+            import random
+            new_params[k] = random.uniform(x_min, x_max)
+        except:
+            raise
+    
+    return new_params
+
+
+                # #If val is a string that contains ",", try to convert it in a range of numbers
+                # #otherwise leave it as it is
+                # #If val is a range of numbers choose randomly a number in that interval
+                # if "," in val:
+                #     args = val.split(",")
+                #     if len(args) == 2:
+                #         try:
+                #             x_min = float(args[0])
+                #             x_max = float(args[1])
+                # 
+                #             import random
+                #             val = random.uniform(x_min, x_max)
+                #         except:
+                #             pass
+
     # #Group together keys that refer to the same parameter in (hi_)class
     # #e.g. (parameters_smg__1 with parameters_smg__2)
     # new_keys = []
@@ -61,20 +102,6 @@ def read_ini_file(input_file):
     #     params[new_key] = new_val
 
 
-                # #If val is a string that contains ",", try to convert it in a range of numbers
-                # #otherwise leave it as it is
-                # #If val is a range of numbers choose randomly a number in that interval
-                # if "," in val:
-                #     args = val.split(",")
-                #     if len(args) == 2:
-                #         try:
-                #             x_min = float(args[0])
-                #             x_max = float(args[1])
-                # 
-                #             import random
-                #             val = random.uniform(x_min, x_max)
-                #         except:
-                #             pass
 
 def create_ini_file(input_file, init_dir, output_dir):
     """ Generates and write the init_file for each model from the input file
