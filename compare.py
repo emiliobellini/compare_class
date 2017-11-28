@@ -88,9 +88,34 @@ output_params = {}
 
 
 for i in np.arange(args.N):
-
-    #Generate random values for all the varying parameters
-    model_params = fs.generate_random(var_params)
+    
+    NO_OUTPUT = True
+    while NO_OUTPUT == True:
+        #Generate random values for all the varying parameters
+        model_params = fs.generate_random(var_params)
+        
+        #Group parameters together to respect the (hi_)class syntax
+        common_params = fs.group_parameters(fix_params, model_params)
+        
+        #Cycle over the different versions of class to generate the ini file and execute class
+        for v in [class_v1, class_v2]:
+            #Name and path of the new ini file
+            v['ini_name'] = args.input_file.split('.')[0] + '_' + v['class_name']
+            v['ini_path'] = BASE_DIR + OUTPUT_DIR + v['ini_name'] + '.ini'
+            #Try to remove the file if already existing
+            try:
+                os.remove(v['ini_path'])
+            except:
+                pass
+            #Create ini file for class
+            fs.create_ini_file(v, common_params, OUTPUT_TMP)
+            #Run class
+            fs.run_class(v)
+            
+            #Check if some output has been generated
+            if os.listdir(OUTPUT_TMP) != []:
+                NO_OUTPUT = False
+    
     #Construct the dictionary that stores all the input values
     for k in model_params.keys():
         if k in input_params.keys():
@@ -98,26 +123,6 @@ for i in np.arange(args.N):
         else:
             input_params[k] = [model_params[k]]
 
-    #Group parameters together to respect the (hi_)class syntax
-    common_params = fs.group_parameters(fix_params, model_params)
-
-
-
-    #Cycle over the different versions of class to generate the ini file and execute class
-    for v in [class_v1, class_v2]:
-        #Name and path of the new ini file
-        v['ini_name'] = args.input_file.split('.')[0] + '_' + v['class_name']
-        v['ini_path'] = BASE_DIR + OUTPUT_DIR + v['ini_name'] + '.ini'
-        #Try to remove the file if already existing
-        try:
-            os.remove(v['ini_path'])
-        except:
-            pass
-        #Create ini file for class
-        fs.create_ini_file(v, common_params, OUTPUT_TMP)
-        #Run class
-        fs.run_class(v)
-    
     #Find the common outputs of the two class runs
     common_output = fs.find_common_output(class_v1, class_v2, COMPARED_FILES, os.listdir(OUTPUT_TMP))
     
