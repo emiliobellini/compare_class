@@ -4,6 +4,7 @@ import numpy as np
 import glob
 import functions as fs
 
+
 #Files to compare, independent variables for each file and allowed percentage differences in the comparison
 COMPARED_FILES = ['background', 'cl', 'pk']
 INDEPENDENT_VARIABLES = {'background': 'z', 'cl': 'l', 'pk': 'k (h/Mpc)'}
@@ -172,7 +173,7 @@ for i in np.arange(args.N):
         #Iterate over the common_vars to calculate the relative differences (except for the independent one)
         for var in common_vars:
             percentage_diffs[co + ':' + var] = fs.return_max_percentage_diff(
-            class_v1['output'][co][INDEPENDENT_VARIABLES[co]], class_v1['output'][co][var], 
+            class_v1['output'][co][INDEPENDENT_VARIABLES[co]], class_v1['output'][co][var],
             class_v2['output'][co][INDEPENDENT_VARIABLES[co]], class_v2['output'][co][var])
 
     #Construct the dictionary that stores all the output values

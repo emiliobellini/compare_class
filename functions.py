@@ -265,7 +265,10 @@ def return_max_percentage_diff(x1, y1, x2, y2):
     #Calculate the relative difference
     therange = [x for x in x1 if xmin<=x<=xmax]
     for x in therange:
-        diff = np.fabs(data2(x)/data1(x)-1.)
+        if data1(x) == 0. and data2(x) == 0.:
+            diff = 0.
+        else:
+            diff = np.fabs(data2(x)/data1(x)-1.)
         if diff > max_diff:
             max_diff = diff
     
