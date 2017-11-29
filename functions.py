@@ -319,5 +319,8 @@ def generate_plots(data, output_dir):
         
         #Save plot
         plt.savefig(file_name)
+        
+        #Close plot
+        plt.close()
     
     return
