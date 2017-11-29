@@ -11,11 +11,14 @@ def read_ini_file(input_file):
 
     """
     
+    import re
+    
     fix_params = {}
     var_params = {}
     with open(input_file, "r") as f:
         for line in f:
             if "=" in line and line[0] != '#':
+                line = re.sub('#.+', '', line)
                 (key, val) = line.split("=")
                 key = key.strip()
                 val = val.strip()
