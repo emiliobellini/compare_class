@@ -203,6 +203,7 @@ def import_output(v, common_output, output_dir):
     """
     
     import numpy as np
+    import re
     
     for co in common_output:
         v['output'][co] = {}
@@ -220,9 +221,10 @@ def import_output(v, common_output, output_dir):
             #Select only lines that start with #
             headers = [x for x in headers if x[0] == '#']
             #Select only the last line with # (it is the line containing the headers)
-            headers = headers[-1][1:]
+            headers = headers[-1]
             #Manipulate headers to get something readable
-            headers = headers[1:].split('  ')
+            headers = re.sub('#','',headers)
+            headers = headers.split('  ')
             headers = [x for x in headers if x !='']
             headers = [x for x in headers if x !=' ']
             headers = [x.strip(' ') for x in headers]
