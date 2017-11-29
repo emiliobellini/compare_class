@@ -1,3 +1,5 @@
 *.pyc
 output/
 init_files/
+*.out
+*.sh
