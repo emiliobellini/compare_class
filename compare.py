@@ -163,7 +163,7 @@ for i in np.arange(args.N):
     #Import the output for each version of class and store it in a dictionary
     for v in [class_v1, class_v2]:
         v['output'] = {}
-        fs.import_output(v, common_output, OUTPUT_TMP)
+        fs.import_output(v, common_output, BASE_DIR + OUTPUT_TMP)
 
     #Initialise the variable that will contain the relative differences
     percentage_diffs = {}
