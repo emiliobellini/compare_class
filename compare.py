@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser("Compare the output of two different versions o
 parser.add_argument("input_file", type=str, help="Input file with values (or range of values) for each parameter")
 parser.add_argument("--p_class_v1", type=str, default = None, help="Input file with parameters only for class-v1")
 parser.add_argument("--p_class_v2", type=str, default = None, help="Input file with parameters only for class-v2")
-parser.add_argument("-N", type=int, default=1, help="Number of executions of the code (default = 1)")
+parser.add_argument("-N", type=int, default=1, help="Number of runs of the code (default = 1)")
 parser.add_argument("--output_dir", "-o", type=str, default = None, help="Output folder")
 parser.add_argument("--want_plots", help="Generate scatter plots of the percentage difference of each variable", action="store_true")
 args = parser.parse_args()
@@ -179,6 +179,9 @@ for i in np.arange(args.N):
     #Remove tmp output files
     for file in os.listdir(OUTPUT_TMP):
         os.remove(OUTPUT_TMP + file)
+    
+    #Print to screen the end of this iteration
+    print 'Completed run ' + str(i+1) + ' of ' + str(args.N)
 
 
 
@@ -205,12 +208,14 @@ for i in range(len(OUTPUT_ORDERED)):
 with open(output_file, "w") as f:
     f.write('#' + '       '.join(OUTPUT_ORDERED) + '\n')
     np.savetxt(f, output_array, delimiter = '       ', fmt='%10.5e')
+print 'Saved output table in ' + OUTPUT_DIR + BASE_NAME + '_output.dat'
 
 
 
 #If plots wanted, generate them
 if args.want_plots:
     fs.generate_plots(output_params, BASE_DIR + OUTPUT_PLOTS + BASE_NAME)
+print 'Saved figures in ' + OUTPUT_PLOTS + BASE_NAME + '_'
 
 
 sys.exit()
