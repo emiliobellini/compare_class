@@ -270,3 +270,48 @@ def return_max_percentage_diff(x1, y1, x2, y2):
             max_diff = diff
     
     return 100*max_diff
+
+
+
+def generate_plots(data, output_dir):
+    """ Generate and save scatter plots for all the output data
+
+    Args:
+        data: dictionary with all the output data.
+        output_dir: folder where to save the plots.
+
+    Returns:
+        Scatter plots for the output data.
+
+    """
+    
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import re
+    
+    for k in data.keys():
+        x = [x+1 for x in range(len(data[k]))]
+        y = data[k]
+        
+        #Name for the output
+        new_k = re.sub('\s.+', '', k)
+        new_k = re.sub(':', '_', new_k)
+        file_name = output_dir + '_' + new_k + '.pdf'
+        
+        #Decide x range
+        delta_x = (max(x)-min(x))/40.
+        x_min = min(x) - delta_x
+        x_max = max(x) + delta_x
+        plt.xlim(x_min,x_max)
+        #Generate labels
+        plt.ylabel('N')
+        plt.ylabel('diff. [%]')
+        plt.title(k)
+        
+        #Generate scatter plot
+        plt.scatter(x, y)
+        
+        #Save plot
+        plt.savefig(file_name)
+    
+    return

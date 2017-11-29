@@ -16,7 +16,9 @@ parser.add_argument("--p_class_v1", type=str, default = None, help="Input file w
 parser.add_argument("--p_class_v2", type=str, default = None, help="Input file with parameters only for class-v2")
 parser.add_argument("-N", type=int, default=1, help="Number of executions of the code (default = 1)")
 parser.add_argument("--output_dir", "-o", type=str, default = None, help="Output folder")
+parser.add_argument("--want_plots", help="Generate scatter plots of the percentage difference of each variable", action="store_true")
 args = parser.parse_args()
+
 
 
 
@@ -65,6 +67,8 @@ else:
 OUTPUT_PROBLEMATIC_INI = OUTPUT_DIR + 'problematic_ini/'
 #Folder containing the temporary output generated at each run
 OUTPUT_TMP = OUTPUT_DIR + 'tmp/'
+#Folder containing the plots
+OUTPUT_PLOTS = OUTPUT_DIR + 'plots/'
 
 #Generate folder structure
 try:
@@ -79,8 +83,15 @@ try:
     os.mkdir(OUTPUT_TMP)
 except:
     pass
+if args.want_plots:
+    try:
+        os.mkdir(OUTPUT_PLOTS)
+    except:
+        pass
 
 
+#Base name for the output files
+BASE_NAME = args.input_file.split('.')[0].split('/')[-1]
 
 #Definition of the dictionaries containing the values of the input and output parameters
 input_params = {}
@@ -88,19 +99,19 @@ output_params = {}
 
 
 for i in np.arange(args.N):
-    
+
     NO_OUTPUT = True
     while NO_OUTPUT == True:
         #Generate random values for all the varying parameters
         model_params = fs.generate_random(var_params)
-        
+
         #Group parameters together to respect the (hi_)class syntax
         common_params = fs.group_parameters(fix_params, model_params)
-        
+
         #Cycle over the different versions of class to generate the ini file and execute class
         for v in [class_v1, class_v2]:
             #Name and path of the new ini file
-            v['ini_name'] = args.input_file.split('.')[0].split('/')[-1] + '_' + v['class_name']
+            v['ini_name'] = BASE_NAME + '_' + v['class_name']
             v['ini_path'] = BASE_DIR + OUTPUT_DIR + v['ini_name'] + '.ini'
             #Try to remove the file if already existing
             try:
@@ -111,11 +122,11 @@ for i in np.arange(args.N):
             fs.create_ini_file(v, common_params, OUTPUT_TMP)
             #Run class
             fs.run_class(v)
-            
+
             #Check if some output has been generated
             if os.listdir(OUTPUT_TMP) != []:
                 NO_OUTPUT = False
-    
+
     #Construct the dictionary that stores all the input values
     for k in model_params.keys():
         if k in input_params.keys():
@@ -125,15 +136,15 @@ for i in np.arange(args.N):
 
     #Find the common outputs of the two class runs
     common_output = fs.find_common_output(class_v1, class_v2, COMPARED_FILES, os.listdir(OUTPUT_TMP))
-    
+
     #Import the output for each version of class and store it in a dictionary
     for v in [class_v1, class_v2]:
         v['output'] = {}
         fs.import_output(v, common_output, OUTPUT_TMP)
-    
+
     #Initialise the variable that will contain the relative differences
     percentage_diffs = {}
-    
+
     #Calculate the max percentage difference for each variable of each file
     for co in common_output:
         #Determine what are the common dependent variables for each file
@@ -144,14 +155,14 @@ for i in np.arange(args.N):
             percentage_diffs[co + ':' + var] = fs.return_max_percentage_diff(
             class_v1['output'][co][INDEPENDENT_VARIABLES[co]], class_v1['output'][co][var], 
             class_v2['output'][co][INDEPENDENT_VARIABLES[co]], class_v2['output'][co][var])
-    
+
     #Construct the dictionary that stores all the output values
     for k in percentage_diffs.keys():
         if k in output_params.keys():
             output_params[k].append(percentage_diffs[k])
         else:
             output_params[k] = [percentage_diffs[k]]
-    
+
     #Decides if the percentage differences are negligible or it has to store the ini file
     KEEP_INI_FILES = False
     for k in percentage_diffs.keys():
@@ -164,7 +175,7 @@ for i in np.arange(args.N):
         for v in [class_v1, class_v2]:
             new_ini_path = OUTPUT_PROBLEMATIC_INI + v['ini_name'] + '_' + str(args.N) + '.ini'
             os.rename(v['ini_path'], new_ini_path)
-    
+
     #Remove tmp output files
     for file in os.listdir(OUTPUT_TMP):
         os.remove(OUTPUT_TMP + file)
@@ -174,7 +185,7 @@ for i in np.arange(args.N):
 
 
 #Name for the output file
-output_file = BASE_DIR + OUTPUT_DIR + args.input_file.split('.')[0].split('/')[-1] + '_output.dat'
+output_file = BASE_DIR + OUTPUT_DIR + BASE_NAME + '_output.dat'
 
 #Create an ordered list of parameters (before input and then output)
 OUTPUT_ORDERED = input_params.keys() + output_params.keys()
@@ -194,5 +205,12 @@ for i in range(len(OUTPUT_ORDERED)):
 with open(output_file, "w") as f:
     f.write('#' + '       '.join(OUTPUT_ORDERED) + '\n')
     np.savetxt(f, output_array, delimiter = '       ', fmt='%10.5e')
+
+
+
+#If plots wanted, generate them
+if args.want_plots:
+    fs.generate_plots(output_params, BASE_DIR + OUTPUT_PLOTS + BASE_NAME)
+
 
 sys.exit()
