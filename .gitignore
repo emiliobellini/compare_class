@@ -3,3 +3,4 @@ output/
 init_files/
 *.out
 *.sh
+.bashrc
