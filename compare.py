@@ -100,7 +100,7 @@ for i in np.arange(args.N):
         #Cycle over the different versions of class to generate the ini file and execute class
         for v in [class_v1, class_v2]:
             #Name and path of the new ini file
-            v['ini_name'] = args.input_file.split('.')[0] + '_' + v['class_name']
+            v['ini_name'] = args.input_file.split('.')[0].split('/')[-1] + '_' + v['class_name']
             v['ini_path'] = BASE_DIR + OUTPUT_DIR + v['ini_name'] + '.ini'
             #Try to remove the file if already existing
             try:
@@ -174,7 +174,7 @@ for i in np.arange(args.N):
 
 
 #Name for the output file
-output_file = BASE_DIR + OUTPUT_DIR + args.input_file.split('.')[0] + '_output.dat'
+output_file = BASE_DIR + OUTPUT_DIR + args.input_file.split('.')[0].split('/')[-1] + '_output.dat'
 
 #Create an ordered list of parameters (before input and then output)
 OUTPUT_ORDERED = input_params.keys() + output_params.keys()
