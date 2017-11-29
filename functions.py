@@ -16,9 +16,9 @@ def read_ini_file(input_file):
     with open(input_file, "r") as f:
         for line in f:
             if "=" in line:
-                line = line.replace(" ", "")
-                line = line.rstrip()
                 (key, val) = line.split("=")
+                key = key.strip()
+                val = val.strip()
                 
                 #If a key contains a val with two floats separated by comma,
                 #it considers it as a varying parameter, otherwise fixed.
@@ -57,8 +57,8 @@ def generate_random(params):
         val = val.split(",")
         try:
             #Try to generate a random number in the range
-            x_min = float(val[0])
-            x_max = float(val[1])
+            x_min = float(val[0].strip())
+            x_max = float(val[1].strip())
             import random
             new_params[k] = random.uniform(x_min, x_max)
         except:
