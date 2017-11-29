@@ -315,7 +315,7 @@ def generate_plots(data, output_dir):
         plt.title(k)
         
         #Generate scatter plot
-        plt.scatter(x, y)
+        plt.scatter(x, y, s=10)
         
         #Save plot
         plt.savefig(file_name)
