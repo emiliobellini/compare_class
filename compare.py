@@ -107,7 +107,7 @@ for i in np.arange(args.N):
     NO_OUTPUT[class_v1['class_name']] = True
     NO_OUTPUT[class_v2['class_name']] = True
     root_output = {}
-    while NO_OUTPUT[class_v1['class_name']] == True or NO_OUTPUT[class_v2['class_name']] == True:
+    while any(NO_OUTPUT.values()):
         #Generate random values for all the varying parameters
         model_params = fs.generate_random(var_params)
 
