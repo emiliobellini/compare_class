@@ -196,7 +196,7 @@ for i in np.arange(args.N):
     #Move the file in the ini directory
     if KEEP_INI_FILES:
         for v in [class_v1, class_v2]:
-            new_ini_path = BASE_DIR + OUTPUT_PROBLEMATIC_INI + v['ini_name'] + '_' + str(args.N) + '.ini'
+            new_ini_path = BASE_DIR + OUTPUT_PROBLEMATIC_INI + v['ini_name'] + '_' + str(i) + '.ini'
             os.rename(v['ini_path'], new_ini_path)
 
     #Remove tmp output files
