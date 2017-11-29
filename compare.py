@@ -123,9 +123,9 @@ for i in np.arange(args.N):
             #Run class
             fs.run_class(v)
 
-            #Check if some output has been generated
-            if os.listdir(OUTPUT_TMP) != []:
-                NO_OUTPUT = False
+        #Check if some output has been generated
+        if os.listdir(OUTPUT_TMP) != []:
+            NO_OUTPUT = False
 
     #Construct the dictionary that stores all the input values
     for k in model_params.keys():
