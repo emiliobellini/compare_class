@@ -116,7 +116,7 @@ def create_ini_file(v, params, output_dir):
         output_dir: relative path to the folder where to store the ini file and the outputs.
 
     Returns:
-        None.
+        The folder containing the output parameters.
 
     """
     
@@ -135,7 +135,7 @@ def create_ini_file(v, params, output_dir):
         for k in params.keys():
             f.write(str(k) + ' = ' + str(params[k]) + '\n')
     
-    return
+    return params['root']
 
 
 
