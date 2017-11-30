@@ -1,7 +1,6 @@
 #This module contains all the functions needed by the compare.py module.
-
-import global_variables as gv
 import argparse
+import global_variables as gv
 
 
 def argument_parser():
@@ -19,7 +18,7 @@ def argument_parser():
     )
     
     #Add supbarser to select between run and info modes.
-    subparsers = parser.add_subparsers(dest='subparser_name',
+    subparsers = parser.add_subparsers(dest='mode',
     help='Either "run", to run the sampler and optionally generate '
     'the plots, or "info", to just generate the plots.')
     

@@ -1,10 +1,19 @@
-import global_variables as gv
+import sys
 import functions as fs
+import global_variables as gv
 
-#Parse command-line arguments
-args = fs.argument_parser()
 
-print args.subparser_name
+def run(args):
+    return
+
+
+def info(args):
+    return
+
+
+
+
+
 
 
 # import os, sys, re
@@ -261,4 +270,13 @@ print args.subparser_name
 # print 'Saved figures in ' + OUTPUT_PLOTS + BASE_NAME + '_'
 # sys.stdout.flush()
 # 
-# sys.exit()
+
+if __name__ == '__main__':
+    
+    #Parse command-line arguments
+    args = fs.argument_parser()
+    
+    if args.mode == 'run':
+        sys.exit(run(args))
+    elif args.mode == 'run':
+        sys.exit(info(args))
