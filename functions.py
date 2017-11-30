@@ -1,3 +1,54 @@
+#This module contains all the functions needed by the compare.py module.
+
+import global_variables as gv
+import argparse
+
+
+def argument_parser():
+    """ Parse the command-line arguments
+
+    Returns:
+        a class with the given arguments
+
+    """
+    
+    parser = argparse.ArgumentParser(
+    'Compare the output of two different versions of (hi_)class. Useful to:\n'
+    ' (i) check that a new version of the code does not introduce new bugs;\n'
+    '(ii) check the differences introduced varying the precision parameters.\n'
+    )
+    
+    #Add supbarser to select between run and info modes.
+    subparsers = parser.add_subparsers(dest='subparser_name',
+    help='Either "run", to run the sampler and optionally generate '
+    'the plots, or "info", to just generate the plots.')
+    
+    run_parser = subparsers.add_parser('run')
+    info_parser = subparsers.add_parser('info')
+    
+    #Arguments for run
+    run_parser.add_argument('input_file', type=str, help='Input file')
+    run_parser.add_argument('--param-v1', type=str, default = None,
+    help='Input file only for class-v1')
+    run_parser.add_argument('--param-v2', type=str, default = None,
+    help='Input file only for class-v2')
+    run_parser.add_argument('-N', type=int, default=1,
+    help='Number of iterations (default = 1)')
+    run_parser.add_argument('--output-dir', '-o', type=str, default = None,
+    help='Output folder')
+    parser.add_argument('--want-plots', action='store_true',
+    help='Generate plots from the output')
+
+    #Arguments for info
+    info_parser.add_argument('--output-dir', '-o', type=str, default = None,
+    help='Folder where the output table is stored')
+
+    args = parser.parse_args()
+    
+    return args
+
+
+
 # def read_ini_file(input_file):
 #     """ Open and read the input file
 # 

@@ -1,26 +1,21 @@
+import global_variables as gv
+import functions as fs
+
+#Parse command-line arguments
+args = fs.argument_parser()
+
+print args.subparser_name
+
+
 # import os, sys, re
-# import argparse
 # import numpy as np
 # import glob
-# import functions as fs
-# 
 # 
 # #Files to compare, independent variables for each file and allowed percentage differences in the comparison
 # COMPARED_FILES = ['background', 'cl', 'pk']
 # INDEPENDENT_VARIABLES = {'background': 'z', 'cl': 'l', 'pk': 'k (h/Mpc)'}
 # ALLOWED_PERCENTAGE_DIFFS = {'background': 1., 'cl': 1., 'pk': 1.}
 # 
-# 
-# # Parse the given arguments
-# parser = argparse.ArgumentParser("Compare the output of two different versions of (hi_)class: class-v1, class-v2")
-# parser.add_argument("input_file", type=str, help="Input file with values (or range of values) for each parameter")
-# parser.add_argument("--p_class_v1", type=str, default = None, help="Input file with parameters only for class-v1")
-# parser.add_argument("--p_class_v2", type=str, default = None, help="Input file with parameters only for class-v2")
-# parser.add_argument("-N", type=int, default=1, help="Number of runs of the code (default = 1)")
-# parser.add_argument("--output_dir", "-o", type=str, default = None, help="Output folder")
-# parser.add_argument("--want_plots", help="Generate scatter plots of the percentage difference of each variable", action="store_true")
-# parser.add_argument("--want_only_plots", help="Generate scatter plots of the percentage difference of each variable (skip the run)", action="store_true")
-# args = parser.parse_args()
 # 
 # 
 # 
