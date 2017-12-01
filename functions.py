@@ -25,7 +25,7 @@ def argument_parser():
     run_parser = subparsers.add_parser('run')
     info_parser = subparsers.add_parser('info')
     
-    #Arguments for run
+    #Arguments for 'run'
     run_parser.add_argument('input_file', type=str, help='Input file')
     run_parser.add_argument('--param-v1', type=str, default = None,
     help='Input file only for class-v1')
@@ -38,7 +38,7 @@ def argument_parser():
     parser.add_argument('--want-plots', action='store_true',
     help='Generate plots from the output')
 
-    #Arguments for info
+    #Arguments for 'info'
     info_parser.add_argument('--output-dir', '-o', type=str, default = None,
     help='Folder where the output table is stored')
 

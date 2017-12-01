@@ -4,11 +4,18 @@ import global_variables as gv
 
 
 def run(args):
+    """
+    Main function. Steps:
+      (i) Read the input parameters.
+     (ii) Generate random values for the varying parameters
+    (iii) Run the two versions of class and generate outputs
+     (iv) Read the outputs and calculate the relative diffs
+      (v) Output a table with the relative diffs for each model
+     (vi) If requested, output plots with relative diffs for each variable
+    """
     return
 
 
-def info(args):
-    return
 
 
 
@@ -16,7 +23,7 @@ def info(args):
 
 
 
-# import os, sys, re
+# import os, re
 # import numpy as np
 # import glob
 # 
@@ -271,6 +278,10 @@ def info(args):
 # sys.stdout.flush()
 # 
 
+def info(args):
+    return
+
+# -----------------MAIN-CALL---------------------------------------------
 if __name__ == '__main__':
     
     #Parse command-line arguments
@@ -278,5 +289,5 @@ if __name__ == '__main__':
     
     if args.mode == 'run':
         sys.exit(run(args))
-    elif args.mode == 'run':
+    elif args.mode == 'info':
         sys.exit(info(args))
