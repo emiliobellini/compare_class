@@ -1,4 +1,6 @@
 #This module contains all the functions needed by the compare.py module.
+import os
+import re
 import argparse
 import global_variables as gv
 
@@ -27,14 +29,12 @@ def argument_parser():
     
     #Arguments for 'run'
     run_parser.add_argument('input_file', type=str, help='Input file')
-    run_parser.add_argument('--param-v1', type=str, default = None,
+    run_parser.add_argument('--params-v1', type=str, default = None,
     help='Input file only for class-v1')
-    run_parser.add_argument('--param-v2', type=str, default = None,
+    run_parser.add_argument('--params-v2', type=str, default = None,
     help='Input file only for class-v2')
     run_parser.add_argument('-N', type=int, default=1,
     help='Number of iterations (default = 1)')
-    run_parser.add_argument('--output-dir', '-o', type=str, default = None,
-    help='Output folder')
     parser.add_argument('--want-plots', action='store_true',
     help='Generate plots from the output')
 
@@ -45,6 +45,160 @@ def argument_parser():
     args = parser.parse_args()
     
     return args
+
+
+def read_input_parameters(args):
+    """
+    Read the input parameters.
+    
+    Return a dict with the parameters (keys: 'common', 'v1', 'v2').
+    """
+    
+    #Define the main dictionary params
+    params = {}
+    
+    #Define three different dictionaries for parameters
+    params['common'] = {}
+    params['v1'] = {}
+    params['v2'] = {}
+    
+    #Read the common parameters
+    params['common'] = read_ini_file(args.input_file)
+    
+    #Read parameters for class_v1
+    if args.params_v1 is not None:
+        params['v1'] = read_ini_file(args.params_v1)
+    
+    #Read parameters for class_v2
+    if args.params_v2 is not None:
+        params['v2'] = read_ini_file(args.params_v2)
+    
+    return params
+
+
+def read_ini_file(fname):
+    """
+    Open and read an imput file.
+    
+    Return a dict with the parameters in that file.
+    """
+    
+    #Initialise dict
+    params = {}
+    
+    #Check if file exists and return its absolute path
+    path_file = os.path.abspath(fname)
+    if not os.path.exists(path_file):
+        raise IOError('The file ' + fname + ' does not exist!')
+    
+    #Read each line of the file
+    with open(path_file, "r") as f:
+        for line in f:
+            #Remove comments
+            line = re.sub('#.+', '', line)
+            if '=' in line:
+                #Separate keys from values
+                (key, val) = line.split("=")
+                #Remove white spaces
+                key = key.strip()
+                val = val.strip()
+                #Assign to dict key and value
+                params[key] = val
+    
+    return params
+
+
+def get_output_path_and_name(params):
+    """
+    Extract from the params dict the output path and the prefix
+    for all the output files.
+    
+    Return the params dict with the output folder split into
+    'root' and 'f_prefix'.
+    """
+    
+    #Extract the output folder and file prefix from params
+    if 'root_output' in params['common'].keys():
+        params['root'] = params['common']['root_output'].split('/')
+        params['f_prefix'] = params['root'][-1]
+        params['root'] = '/'.join(params['root'][:-1]) + '/'
+    else:
+        raise IOError('No root_output in the parameter file')
+    
+    #Remove the old 'root_output' key from params
+    params['common'].pop('root_output', None)
+    
+    return params
+
+
+def folder_exists_or(fname, mod = 'error'):
+    """
+    Check if a folder exists.
+    If it exists return the absolute path,
+    otherwise raise an error or create it
+    (depending on the mode)
+    """
+
+    #Absolute path of the folder
+    abs_path = os.path.abspath(fname) + '/'
+
+    #Check if file exists
+    if not os.path.isdir(abs_path):
+        if mod == 'create':
+            os.makedirs(abs_path)
+        else:
+            raise IOError(abs_path + 'does not exist!')
+
+    return abs_path
+
+
+def create_folders(args, params):
+    """
+    Create folder structure.
+
+    Return a dict with the folders created.
+    In addition it removes from params the root keys
+    """
+
+    #Define folders dict
+    folders = {}
+    
+    #Create key for the file prefix
+    folders['f_prefix'] = params['f_prefix']
+
+    #Create output folder
+    fname = params['root']
+    folders['main'] = folder_exists_or(fname, 'create')
+
+    #Extract installation folders of class_v1 and class_v2
+    fname = params['common']['root_class_v1']
+    folders['class_v1'] = folder_exists_or(fname, 'error')
+    fname = params['common']['root_class_v2']
+    folders['class_v2'] = folder_exists_or(fname, 'error')
+
+    #Create tmp folder (for class output)
+    fname = folders['main'] + 'tmp/'
+    folders['tmp'] = folder_exists_or(fname, 'create')
+
+    #Create plot folder folder (for class output)
+    if args.want_plots:
+        fname = folders['main'] + 'plots/'
+        folders['plots'] = folder_exists_or(fname, 'create')
+    
+    #Assign to params['common']['root'] the relative path of the
+    #tmp folder, which will be used by class to store the outputs
+    fname = os.path.relpath(folders['tmp'])
+    params['common']['root'] = fname + '/' + folders['f_prefix']
+
+    #Remove roots from params
+    params.pop('f_prefix', None)
+    params.pop('root', None)
+    params['common'].pop('root_class_v1', None)
+    params['common'].pop('root_class_v2', None)
+   
+    return params, folders
+
+
 
 
 

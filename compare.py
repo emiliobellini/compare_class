@@ -5,14 +5,42 @@ import global_variables as gv
 
 def run(args):
     """
-    Main function. Steps:
+    Main function. The main steps are:
       (i) Read the input parameters.
      (ii) Generate random values for the varying parameters
     (iii) Run the two versions of class and generate outputs
      (iv) Read the outputs and calculate the relative diffs
       (v) Output a table with the relative diffs for each model
      (vi) If requested, output plots with relative diffs for each variable
+    
+    Loop over points (ii)-(iv) to sample different models
     """
+    
+    #Read input parameters and output dictionaries
+    #for them (keys: 'common', 'v1', 'v2')
+    params = fs.read_input_parameters(args)
+
+    
+    #Get output path and name
+    params = fs.get_output_path_and_name(params)
+    print params
+    
+    #Create folder structure
+    params, folders = fs.create_folders(args, params)
+    print 'new'
+    print params
+    print folders
+    
+    # dic1 = {'a': 1, 'b': 2}
+    # dic2 = {'a': 3, 'c': 4}
+    # print dic1
+    # print dic2
+    # dic1 = dic2
+    # print dic1
+
+    
+#    print params
+    
     return
 
 
@@ -31,10 +59,6 @@ def run(args):
 # COMPARED_FILES = ['background', 'cl', 'pk']
 # INDEPENDENT_VARIABLES = {'background': 'z', 'cl': 'l', 'pk': 'k (h/Mpc)'}
 # ALLOWED_PERCENTAGE_DIFFS = {'background': 1., 'cl': 1., 'pk': 1.}
-# 
-# 
-# 
-# 
 # 
 # #Define working directory
 # BASE_DIR = os.path.dirname(os.path.abspath(__file__)) + '/'
