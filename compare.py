@@ -23,11 +23,9 @@ def run(args):
     
     #Get output path and name
     params = fs.get_output_path_and_name(params)
-    print params
     
     #Create folder structure
     params, folders = fs.create_folders(args, params)
-    print 'new'
     print params
     print folders
     
