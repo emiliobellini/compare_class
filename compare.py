@@ -11,7 +11,7 @@ def run(args):
     (iii) Run the two versions of class and generate outputs
      (iv) Read the outputs and calculate the relative diffs
       (v) Output a table with the relative diffs for each model
-     (vi) If requested, output plots with relative diffs for each variable
+     (vi) Optional: output plots with relative diffs for each variable
     
     Loop over points (ii)-(iv) to sample different models
     """
@@ -19,25 +19,33 @@ def run(args):
     #Read input parameters and output dictionaries
     #for them (keys: 'common', 'v1', 'v2')
     params = fs.read_input_parameters(args)
-
     
     #Get output path and name
     params = fs.get_output_path_and_name(params)
     
     #Create folder structure
     params, folders = fs.create_folders(args, params)
-    print params
+    
+    #Separate fixed params from the varying ones
+    params = fs.separate_fix_from_varying(params)
+    
+    #Start loop
+    for step in range(1,args.N+1):
+    
+        if True:
+            #Generate random numbers for the varying parameters
+            params = fs.generate_random_params(params)
+            
+            for v in ['v1', 'v2']:
+                #Group parameters together for each version of class
+                params[v] = fs.group_parameters(params[v])
+                
+                #Create ini files
+#                fs.create_ini_file()
+
+#    print params
     print folders
     
-    # dic1 = {'a': 1, 'b': 2}
-    # dic2 = {'a': 3, 'c': 4}
-    # print dic1
-    # print dic2
-    # dic1 = dic2
-    # print dic1
-
-    
-#    print params
     
     return
 
@@ -57,82 +65,7 @@ def run(args):
 # COMPARED_FILES = ['background', 'cl', 'pk']
 # INDEPENDENT_VARIABLES = {'background': 'z', 'cl': 'l', 'pk': 'k (h/Mpc)'}
 # ALLOWED_PERCENTAGE_DIFFS = {'background': 1., 'cl': 1., 'pk': 1.}
-# 
-# #Define working directory
-# BASE_DIR = os.path.dirname(os.path.abspath(__file__)) + '/'
-# 
-# #Define dictionaries for the different versions of class
-# class_v1 = {}
-# class_v2 = {}
-# class_v1['class_name'] = 'v1'
-# class_v2['class_name'] = 'v2'
-# 
-# #Read input file and generate two dictionaries containing the fixed and the varying parameters
-# fix_params, var_params = fs.read_ini_file(BASE_DIR + args.input_file)
-# #Read optional input file for class-v1 and generate a dictionary with its parameters
-# if args.p_class_v1 is None:
-#     class_v1['params'] = {}
-# else:
-#     class_v1['params'], _ = fs.read_ini_file(BASE_DIR + args.p_class_v1)
-# #Read optional input file for class-v1 and generate a dictionary with its parameters
-# if args.p_class_v2 is None:
-#     class_v2['params'] = {}
-# else:
-#     class_v2['params'], _ = fs.read_ini_file(BASE_DIR + args.p_class_v2)
-# 
-# 
-# 
-# #Define directories:
-# #    class_v1['root'] : folder of the first version of class to compare;
-# #    class_v2['root'] : folder of the second version of class to compare;
-# #    OUTPUT_DIR : relative (to BASE_DIR) path where to store the output files
-# 
-# class_v1['root'] = BASE_DIR + fix_params['root_class_v1']
-# class_v2['root'] = BASE_DIR + fix_params['root_class_v2']
-# #Remove directories of class_v1 and class_v2 from the list of parameters
-# fix_params.pop('root_class_v1', None)
-# fix_params.pop('root_class_v2', None)
-# 
-# #Read the output directory
-# if args.output_dir is None:
-#     OUTPUT_DIR = 'output/'
-# else:
-#     OUTPUT_DIR = args.output_dir
-# 
-# #Folder containing all the problematic init files
-# OUTPUT_PROBLEMATIC_INI = OUTPUT_DIR + 'problematic_ini/'
-# #Folder containing the temporary output generated at each run
-# OUTPUT_TMP = OUTPUT_DIR + 'tmp/'
-# #Folder containing the plots
-# OUTPUT_PLOTS = OUTPUT_DIR + 'plots/'
-# 
-# #Generate folder structure
-# try:
-#     os.mkdir(OUTPUT_DIR)
-# except:
-#     pass
-# try:
-#     os.mkdir(OUTPUT_PROBLEMATIC_INI)
-# except:
-#     pass
-# try:
-#     os.mkdir(OUTPUT_TMP)
-# except:
-#     pass
-# if args.want_plots or args.want_only_plots:
-#     try:
-#         os.mkdir(OUTPUT_PLOTS)
-#     except:
-#         pass
-# 
-# 
-# #Base name for the output files
-# BASE_NAME = args.input_file.split('.')[0].split('/')[-1]
-# 
-# #Definition of the dictionaries containing the values of the input and output parameters
-# input_params = {}
-# output_params = {}
-# 
+
 # #Run only if needed
 # if not args.want_only_plots:
 #     for i in np.arange(args.N):
@@ -143,11 +76,6 @@ def run(args):
 #         NO_OUTPUT[class_v2['class_name']] = True
 #         root_output = {}
 #         while any(NO_OUTPUT.values()):
-#             #Generate random values for all the varying parameters
-#             model_params = fs.generate_random(var_params)
-# 
-#             #Group parameters together to respect the (hi_)class syntax
-#             common_params = fs.group_parameters(fix_params, model_params)
 # 
 #             #Cycle over the different versions of class to generate the ini file and execute class
 #             for v in [class_v1, class_v2]:

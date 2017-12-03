@@ -2,6 +2,7 @@
 import os
 import re
 import argparse
+import random
 import global_variables as gv
 
 
@@ -39,8 +40,8 @@ def argument_parser():
     help='Generate plots from the output')
 
     #Arguments for 'info'
-    info_parser.add_argument('--output-dir', '-o', type=str, default = None,
-    help='Folder where the output table is stored')
+    info_parser.add_argument('--output-dir', '-o', type=str,
+    default = None, help='Folder where the output table is stored')
 
     args = parser.parse_args()
     
@@ -185,10 +186,11 @@ def create_folders(args, params):
         fname = folders['main'] + 'plots/'
         folders['plots'] = folder_exists_or(fname, 'create')
     
-    #Assign to params['common']['root'] the relative path of the
-    #tmp folder, which will be used by class to store the outputs
-    fname = os.path.relpath(folders['tmp'])
-    params['common']['root'] = fname + '/' + folders['f_prefix']
+    #Assign to params of each version of class the relative path of
+    #the tmp folder, which will be used by class to store the outputs
+    fname = os.path.relpath(folders['tmp']) + '/' + folders['f_prefix']
+    params['v1']['root'] = fname + 'v1_'
+    params['v2']['root'] = fname + 'v2_'
 
     #Remove roots from params
     params.pop('f_prefix', None)
@@ -199,121 +201,96 @@ def create_folders(args, params):
     return params, folders
 
 
+def separate_fix_from_varying(params):
+    """
+    Restructure the params dict.
+    
+    Divide the 'common' params into fixed and varying.
+    Fixed params are copied in both 'v1' and 'v2'.
+    Varying are copied in 'var'. 'common' is removed.
+    """
+    
+    #Initialize key var, where all the varying params
+    #are stored.
+    params['var'] = {}
+    #For each key, if it is a range move it to 'var'
+    for key in params['common']:
+        val = params['common'][key].split(',')
+        if len(val) == 2:
+            try:
+                float(val[0].strip())
+                float(val[1].strip())
+                
+                params['var'][key] = params['common'][key]
+            except:
+                pass
+    
+    #Remove the varying keys from 'common'
+    for key in params['var'].keys():
+        params['common'].pop(key, None)
+    
+    #Copy fixed keys from 'common' to 'v1' and 'v2'
+    for key in params['common'].keys():
+        params['v1'][key] = params['common'][key]
+        params['v2'][key] = params['common'][key]
+    
+    #Remove the 'common' key
+    params.pop('common', None)
+    
+    return params
+
+
+def generate_random_params(params):
+    """
+    Return the params dict with random values
+    instead of ranges.
+    """
+    
+    for key in params['var']:
+        val = params['var'][key].split(',')
+        xmin = float(val[0].strip())
+        xmax = float(val[1].strip())
+        rnd = random.uniform(xmin, xmax)
+        params['v1'][key] = rnd
+        params['v2'][key] = rnd
+    
+    return params
+
+
+def group_parameters(params):
+    """
+    Group params together to respect the
+    (hi_)class syntax.
+    
+    Return an updated dict of params.
+    """
+    
+    #Find keys that end with __1
+    new_keys = []
+    for key in params.keys():
+        if "__1" in key:
+            new_keys.append(key.strip("__1"))
+
+    for new_key in new_keys:
+        count=0
+        new_val = ''
+        for key in params.keys():
+            if new_key in key:
+                count += 1
+        for i in range(count):
+            old_key = new_key + '__' + str(i+1)
+            new_val += str(params[old_key]) + ','
+            params.pop(old_key, None)
+        new_val = new_val[:-1]
+        params[new_key] = new_val
+    
+    return params
 
 
 
-# def read_ini_file(input_file):
-#     """ Open and read the input file
-# 
-#     Args:
-#         input_file: path to the input_file.
-# 
-#     Returns:
-#         dictionaries with all the parameters of the input_file:
-#             fix_params: for the fixed parameters
-#             var_params: for the varied parameters
-# 
-#     """
-# 
-#     import re
-# 
-#     fix_params = {}
-#     var_params = {}
-#     with open(input_file, "r") as f:
-#         for line in f:
-#             if "=" in line and line[0] != '#':
-#                 line = re.sub('#.+', '', line)
-#                 (key, val) = line.split("=")
-#                 key = key.strip()
-#                 val = val.strip()
-# 
-#                 #If a key contains a val with two floats separated by comma,
-#                 #it considers it as a varying parameter, otherwise fixed.
-#                 if "," in val and len(val.split(",")) == 2:
-#                     try:
-#                         float(val.split(",")[0])
-#                         float(val.split(",")[1])
-# 
-#                         #Assign to var_params the key
-#                         var_params[key] = val
-#                     except:
-#                         #Assign to fix_params the key
-#                         fix_params[key] = val
-#                 else:
-#                     #Assign to fix_params the key
-#                     fix_params[key] = val
-# 
-# 
-#     return fix_params, var_params
-# 
-# 
-# 
-# def generate_random(params):
-#     """ Generate random values from ranges
-# 
-#     Args:
-#         params: dictionary with varying parameters.
-# 
-#     Returns:
-#         new_params: new dictionary with random numbers instead of ranges
-#     """
-# 
-#     new_params = {}
-#     for k in params.keys():
-#         val = params[k]
-#         val = val.split(",")
-#         try:
-#             #Try to generate a random number in the range
-#             x_min = float(val[0].strip())
-#             x_max = float(val[1].strip())
-#             import random
-#             new_params[k] = random.uniform(x_min, x_max)
-#         except:
-#             raise
-# 
-#     return new_params
-# 
-# 
-# 
-# def group_parameters(params_1, params_2):
-#     """ Group together parameters
-# 
-#     Args:
-#         params_1: dictionary parameters.
-#         params_2: dictionary parameters.
-# 
-#     Returns:
-#         params: a single dictionary with the parameters grouped together
-#     """
-# 
-#     #Merge the two dictionaries
-#     params = params_1.copy()
-#     params.update(params_2)
-# 
-#     #Group together keys that refer to the same parameter in (hi_)class
-#     #e.g. (parameters_smg__1 with parameters_smg__2)
-#     new_keys = []
-#     for key in params.keys():
-#         if "__1" in key:
-#             new_keys.append(key.strip("__1"))
-# 
-#     for new_key in new_keys:
-#         new_val = ''
-#         count=0
-#         for key in params.keys():
-#             if new_key in key:
-#                 count += 1
-#         for i in range(count):
-#             old_key = new_key + '__' + str(i+1)
-#             new_val += str(params[old_key]) + ','
-#             params.pop(old_key, None)
-#         new_val = new_val[:-1]
-#         params[new_key] = new_val
-# 
-#     return params
-# 
-# 
-# 
+
+
+
 # def create_ini_file(v, params, output_dir):
 #     """ Write the parameter file
 # 
