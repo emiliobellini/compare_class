@@ -287,42 +287,24 @@ def group_parameters(params):
     return params
 
 
+def create_ini_file(params, folders, v):
+    """
+    Create ini file for each version of class
+    and write it in the output folder
+    """
+    
+    ini_path = folders['main'] + folders['f_prefix'] + v + '.ini'
+    with open(ini_path, 'w') as f:
+        for k in params.keys():
+            f.write(str(k) + ' = ' + str(params[k]) + '\n')
+
+    return
 
 
 
 
-# def create_ini_file(v, params, output_dir):
-#     """ Write the parameter file
-# 
-#     Args:
-#         v: dictionary containing properties of each version of class.
-#         params: dictionary of the common parameters.
-#         output_dir: relative path to the folder where to store the ini file and the outputs.
-# 
-#     Returns:
-#         The folder containing the output parameters.
-# 
-#     """
-# 
-#     #Merge the two dictionaries
-#     params = params.copy()
-#     params.update(v['params'])
-# 
-#     #Add root for the output (it is the relative path w.r.t. base_dir)
-#     output_name = v['ini_path'].split('/')[-1]
-#     output_name = output_name.split('.')[0]
-#     params['root'] = output_dir + output_name + '_'
-# 
-# 
-#     #Create the file
-#     with open(v['ini_path'], 'w') as f:
-#         for k in params.keys():
-#             f.write(str(k) + ' = ' + str(params[k]) + '\n')
-# 
-#     return params['root']
-# 
-# 
-# 
+
+
 # def run_class(v):
 #     """ Run the current version of class
 # 

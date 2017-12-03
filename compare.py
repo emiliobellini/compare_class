@@ -41,10 +41,10 @@ def run(args):
                 params[v] = fs.group_parameters(params[v])
                 
                 #Create ini files
-#                fs.create_ini_file()
+                fs.create_ini_file(params[v], folders, v)
 
 #    print params
-    print folders
+#    print folders
     
     
     return
