@@ -31,20 +31,36 @@ def run(args):
     
     #Start loop
     for step in range(1,args.N+1):
-    
-        if True:
+        
+        #Only if has_output is 2 (both codes generated output)
+        #exit the loop. Otherwise repeat the loop with new params.
+        has_output = 0
+        while has_output is not 2:
             #Generate random numbers for the varying parameters
             params = fs.generate_random_params(params)
             
+            #Initialize output to 0.
+            has_output = 0
             for v in ['v1', 'v2']:
                 #Group parameters together for each version of class
                 params[v] = fs.group_parameters(params[v])
                 
                 #Create ini files
-                fs.create_ini_file(params[v], folders, v)
+                folders = fs.create_ini_file(params[v], folders, v)
                 
                 #Run class
                 fs.run_class(folders, v)
+                
+                #Check if run_class generated output
+                has_output = fs.has_output(folders, v, has_output)
+            
+            #Print messages and store ini files depending on has_output
+            fs.print_messages(has_output)
+            
+            #Clean ini files. If only one output has been generated,
+            #store the ini files in ini_to_check/.
+            fs.clean_ini(step, folders, has_output)
+
 
 #    print params
 #    print folders
@@ -74,30 +90,10 @@ def run(args):
 #     for i in np.arange(args.N):
 # 
 # 
-#         NO_OUTPUT = {}
-#         NO_OUTPUT[class_v1['class_name']] = True
-#         NO_OUTPUT[class_v2['class_name']] = True
-#         root_output = {}
 #         while any(NO_OUTPUT.values()):
 # 
 #             #Cycle over the different versions of class to generate the ini file and execute class
 #             for v in [class_v1, class_v2]:
-#                 #Name and path of the new ini file
-#                 v['ini_name'] = BASE_NAME + '_' + v['class_name']
-#                 v['ini_path'] = BASE_DIR + OUTPUT_DIR + v['ini_name'] + '.ini'
-#                 #Try to remove the file if already existing
-#                 try:
-#                     os.remove(v['ini_path'])
-#                 except:
-#                     pass
-#                 #Create ini file for class and return the root where the output is stored
-#                 root_output[v['class_name']] = fs.create_ini_file(v, common_params, OUTPUT_TMP)
-#                 #Run class
-#                 fs.run_class(v)
-# 
-#                 #Test if some output have been generated
-#                 if glob.glob(root_output[v['class_name']] + '*') != []:
-#                     NO_OUTPUT[v['class_name']] = False
 # 
 #             #If both outputs have been generated print on the screen the response
 #             if not any(NO_OUTPUT.values()):

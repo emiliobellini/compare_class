@@ -1,9 +1,11 @@
 #This module contains all the functions needed by the compare.py module.
 import os
 import re
+import sys
 import argparse
 import random
 import subprocess
+import fnmatch
 import global_variables as gv
 
 
@@ -182,6 +184,11 @@ def create_folders(args, params):
     fname = folders['main'] + 'tmp/'
     folders['tmp'] = folder_exists_or(fname, 'create')
 
+    #Create ini_to_check folder (for ini files that generated
+    #output from one version of (hi_)class only)
+    fname = folders['main'] + 'ini_to_check/'
+    folders['ini_to_check'] = folder_exists_or(fname, 'create')
+
     #Create plot folder folder (for class output)
     if args.want_plots:
         fname = folders['main'] + 'plots/'
@@ -291,15 +298,20 @@ def group_parameters(params):
 def create_ini_file(params, folders, v):
     """
     Create ini file for each version of class
-    and write it in the output folder
+    and write it in the output folder.
+    Store the ini path in folders.
     """
     
     ini_path = folders['main'] + folders['f_prefix'] + v + '.ini'
+    #Create ini file
     with open(ini_path, 'w') as f:
         for k in params.keys():
             f.write(str(k) + ' = ' + str(params[k]) + '\n')
+    
+    #Store ini path
+    folders['ini_' + v] = ini_path
 
-    return
+    return folders
 
 
 def run_class(folders, v):
@@ -316,26 +328,67 @@ def run_class(folders, v):
     return
 
 
+def has_output(folders, v, output):
+    """
+    Check if run_class generated the requested output
+    and return True or False
+    """
+    
+    #File name to match to check if output was generated
+    fname = folders['f_prefix'] + v + '*'
+    #List of files matching the pattern fname
+    match = fnmatch.filter(os.listdir(folders['tmp']), fname)
+    #Add to output 1 if the list is not empty
+    if match:
+        output = output + 1
+    
+    return output
 
 
-# def run_class(v):
-#     """ Run the current version of class
-# 
-#     Args:
-#         v: dictionary containing properties of each version of class.
-# 
-#     Returns:
-#         None.
-# 
-#     """
-#     import subprocess
-# 
-#     subprocess.call([v['root'] + 'class', v['ini_path']])
-# 
-#     return
-# 
-# 
-# 
+def print_messages(output):
+    """
+    Print messages about the status of the previous run.
+    """
+    
+    #If no output print message
+    if output is 0:
+        print '--------> Both (hi_)class versions failed to run'
+        sys.stdout.flush()
+    #If one output print message and store ini files
+    elif output is 1:
+        print '--------> Only one version of (hi_)class run'
+        sys.stdout.flush()
+    #If both output print message
+    elif output is 2:
+        print '----> Success! Output from both the (hi_)class versions'
+        sys.stdout.flush()
+    
+    return
+
+
+def clean_ini(step, folders, output):
+    """
+    If only one version of (hi_)class generated output
+    store the ini files in the ini_to_check/ folder,
+    otherwise delete them.
+    """
+    
+    #Define folders
+    main = folders['main']
+    ini = folders['ini_to_check']
+    
+    for v in ['ini_v1', 'ini_v2']:
+        #If one output store ini files
+        if output is 1:
+            new_ini = re.sub(main, '', folders[v])
+            new_ini = re.sub('.ini', '_' + str(step) + '.ini', new_ini)
+            new_ini = ini + new_ini
+            os.rename(folders[v], new_ini)
+        else:
+            os.remove(folders[v])
+    
+    return
+
 # def find_common_output(v1, v2, files_to_compare, dir_files):
 #     """ Find the common files in the output folder
 # 
