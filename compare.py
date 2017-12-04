@@ -42,6 +42,9 @@ def run(args):
                 
                 #Create ini files
                 fs.create_ini_file(params[v], folders, v)
+                
+                #Run class
+                fs.run_class(folders, v)
 
 #    print params
 #    print folders

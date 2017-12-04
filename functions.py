@@ -3,6 +3,7 @@ import os
 import re
 import argparse
 import random
+import subprocess
 import global_variables as gv
 
 
@@ -173,9 +174,9 @@ def create_folders(args, params):
 
     #Extract installation folders of class_v1 and class_v2
     fname = params['common']['root_class_v1']
-    folders['class_v1'] = folder_exists_or(fname, 'error')
+    folders['v1'] = folder_exists_or(fname, 'error')
     fname = params['common']['root_class_v2']
-    folders['class_v2'] = folder_exists_or(fname, 'error')
+    folders['v2'] = folder_exists_or(fname, 'error')
 
     #Create tmp folder (for class output)
     fname = folders['main'] + 'tmp/'
@@ -301,6 +302,18 @@ def create_ini_file(params, folders, v):
     return
 
 
+def run_class(folders, v):
+    """
+    Run the current version of class
+    """
+    #Get the path to class
+    class_path = folders[v] + 'class'
+    #Get the path to the ini file
+    ini_path = folders['main'] + folders['f_prefix'] + v + '.ini'
+    #Run class
+    subprocess.call([class_path, ini_path])
+    
+    return
 
 
 
