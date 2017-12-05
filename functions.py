@@ -7,6 +7,7 @@ import random
 import subprocess
 import fnmatch
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy import interpolate
 import global_variables as gv
 
@@ -114,7 +115,7 @@ def read_ini_file(fname):
             line = re.sub('#.+', '', line)
             if '=' in line:
                 #Separate keys from values
-                (key, val) = line.split("=")
+                (key, val) = line.split('=')
                 #Remove white spaces
                 key = key.strip()
                 val = val.strip()
@@ -676,50 +677,69 @@ def write_output_file(output_diffs, folders, args):
     return
 
 
+def read_output_table(fname):
+    """
+    Read output file and return a dictionary
+    with all the values.
+    """
+    
+    #Initialise dictionary
+    data_plots = {}
+    
+    try:
+        with open(fname,'r') as f:
+            header = f.readline()
+            table = np.loadtxt(fname)
+    except:
+        raise IOError('--------> Output table not found!')
+    
+    #Divide headers
+    header = header.strip('#')
+    header = header.strip('\n')
+    header = re.split('\d+:', header)
+    header = [x.strip() for x in header]
+    header = [x for x in header if x !='']
+    
+    #Transpose table
+    table = np.transpose(table)
+    
+    #Generate dictionary
+    for n in range(len(header)):
+        prefix = header[n].split(':')[0]
+        if prefix in gv.X_VARS.keys():
+            data_plots[header[n]] = table[n]
+    
+    return data_plots
 
 
-# def generate_plots(data, output_dir):
-#     """ Generate and save scatter plots for all the output data
-# 
-#     Args:
-#         data: dictionary with all the output data.
-#         output_dir: folder where to save the plots.
-# 
-#     Returns:
-#         Scatter plots for the output data.
-# 
-#     """
-# 
-#     import numpy as np
-#     import matplotlib.pyplot as plt
-#     import re
-# 
-#     for k in data.keys():
-#         x = [x+1 for x in range(len(data[k]))]
-#         y = data[k]
-# 
-#         #Name for the output
-#         new_k = re.sub('\s.+', '', k)
-#         new_k = re.sub(':', '_', new_k)
-#         file_name = output_dir + '_' + new_k + '.pdf'
-# 
-#         #Decide x range
-#         delta_x = (max(x)-min(x))/40.
-#         x_min = min(x) - delta_x
-#         x_max = max(x) + delta_x
-#         plt.xlim(x_min,x_max)
-#         #Generate labels
-#         plt.ylabel('N')
-#         plt.ylabel('diff. [%]')
-#         plt.title(k)
-# 
-#         #Generate scatter plot
-#         plt.scatter(x, y, s=10)
-# 
-#         #Save plot
-#         plt.savefig(file_name)
-# 
-#         #Close plot
-#         plt.close()
-# 
-#     return
+def generate_plots(data, folder):
+    """
+    Generate and save scatter plots for all the output data
+    """
+    
+    for k in data.keys():
+        x = range(1,len(data[k])+1)
+        y = data[k]
+        
+        #File name
+        fname = folder + re.sub(':', '_', k) + '.pdf'
+        
+        #x range
+        delta_x = (max(x)-min(x))/40.
+        x_min = min(x) - delta_x
+        x_max = max(x) + delta_x
+        plt.xlim(x_min,x_max)
+        
+        #Generate labels
+        plt.xlabel('N')
+        plt.ylabel('diff. [%]')
+        plt.title(k)
+        
+        #Generate scatter plot
+        plt.scatter(x, y, s=10)
+        #Save plot
+        plt.savefig(fname)
+        #Close plot
+        plt.close()
+    
+    return

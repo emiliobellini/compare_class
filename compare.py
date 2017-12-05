@@ -120,14 +120,14 @@ def run(args):
     
     #If requested, generate plots
     if args.want_plots:
-        print 'ciccio'
+        #File name and path
+        fname = folders['main'] + folders['f_prefix'] + 'output.dat'
+        #Read output table
+        data_plots = fs.read_output_table(fname)
+        #Generate plots
+        fs.generate_plots(data_plots, folders['plots'])
 
 
-#    print params
-#    print folders
-#    print output
-    
-    
     return
 
 
