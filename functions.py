@@ -38,6 +38,8 @@ def argument_parser():
     help='Input file only for class-v1')
     run_parser.add_argument('--params-v2', type=str, default = None,
     help='Input file only for class-v2')
+    run_parser.add_argument('--ref', type=str, default = None,
+    help='Reference ini file')
     run_parser.add_argument('-N', type=int, default=1,
     help='Number of iterations (default = 1)')
     run_parser.add_argument('--want-plots', action='store_true',
