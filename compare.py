@@ -116,7 +116,8 @@ def run(args):
         sys.stdout.flush()
     
     #Write output
-    fs.write_output_file(output_diffs, folders, args)
+    output_path = fs.write_output_file(output_diffs, folders, args)
+    print 'Saved output table in ' + os.path.relpath(output_path)
     
     #If requested, generate plots
     if args.want_plots:
@@ -126,49 +127,41 @@ def run(args):
         data_plots = fs.read_output_table(fname)
         #Generate plots
         fs.generate_plots(data_plots, folders['plots'])
+        print 'Saved figures in ' + os.path.relpath(folders['plots'])
+        sys.stdout.flush()
 
 
     return
 
 
-
-
-
-
-
-
-
-# import os, re
-# import numpy as np
-# import glob
-# 
-#     #If plots wanted, generate them
-#     if args.want_plots:
-#         fs.generate_plots(output_params, BASE_DIR + OUTPUT_PLOTS + BASE_NAME)
-#         print 'Saved figures in ' + OUTPUT_PLOTS + BASE_NAME + '_'
-#         sys.stdout.flush()
-# 
-# #If only plots wanted, read the output files and generate them
-# if args.want_only_plots:
-#     data = np.loadtxt(OUTPUT_DIR + BASE_NAME + '_output.dat')
-#     with open(OUTPUT_DIR + BASE_NAME + '_output.dat', "r") as f:
-#         headers = f.readline()
-#         headers = re.sub('#','',headers)
-#         headers = headers.split('  ')
-#         headers = [x for x in headers if x !='']
-#         headers = [x for x in headers if x !=' ']
-#         headers = [x.strip(' ') for x in headers]
-#         headers = [x.strip() for x in headers]
-#     for count in range(len(headers)):
-#         if headers[count] not in var_params.keys():
-#             output_params[headers[count]] = data.transpose()[count]
-#             fs.generate_plots(output_params, BASE_DIR + OUTPUT_PLOTS + BASE_NAME)
-# print 'Saved figures in ' + OUTPUT_PLOTS + BASE_NAME + '_'
-# sys.stdout.flush()
-# 
 
 def info(args):
+    """
+    Given the output folder generate plots
+    """
+    
+    #Output path
+    output_path = fs.folder_exists_or(args.output_dir, mod = 'error')
+    #Table path
+    table_path = output_path + output_path.split('/')[-2] + '_output.dat'
+    #Plots path
+    plots_path = fs.folder_exists_or(output_path + 'plots/', mod = 'create')
+    
+    #Try to read output table, otherwise error
+    try:
+        data_plots = fs.read_output_table(table_path)
+    except:
+        raise IOError('--------> Output table not found!')
+    
+    #Generate plots
+    fs.generate_plots(data_plots, plots_path)
+    print 'Saved figures in ' + os.path.relpath(plots_path)
+    sys.stdout.flush()
+
+    
     return
+
+
 
 # -----------------MAIN-CALL---------------------------------------------
 if __name__ == '__main__':

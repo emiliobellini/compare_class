@@ -48,8 +48,8 @@ def argument_parser():
     help='Generate plots from the output')
 
     #Arguments for 'info'
-    info_parser.add_argument('--output-dir', '-o', type=str,
-    default = None, help='Folder where the output table is stored')
+    info_parser.add_argument('output_dir', type=str,
+    help='Folder where the output table is stored')
 
     args = parser.parse_args()
     
@@ -674,7 +674,7 @@ def write_output_file(output_diffs, folders, args):
     #Save file
     np.savetxt(fname, array, header = header, delimiter='    ', fmt='%10.5e')
     
-    return
+    return fname
 
 
 def read_output_table(fname):
