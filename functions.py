@@ -64,12 +64,13 @@ def read_input_parameters(args):
     #Define the main dictionary params
     params = {}
     
-    #Define three (four) different dictionaries for parameters
+    #Define different dictionaries for parameters
     params['common'] = {}
     params['v1'] = {}
     params['v2'] = {}
     if args.ref:
-        params['ref'] = {}
+        params['ref_v1'] = {}
+        params['ref_v2'] = {}
     
     #Read the common parameters
     params['common'] = read_ini_file(args.input_file)
@@ -84,7 +85,8 @@ def read_input_parameters(args):
     
     #Read parameters for reference model
     if args.ref:
-        params['ref'] = read_ini_file(args.ref)
+        params['ref_v1'] = read_ini_file(args.ref)
+        params['ref_v2'] = read_ini_file(args.ref)
 
     return params
 
@@ -186,8 +188,12 @@ def create_folders(args, params):
     #Extract installation folders of class_v1 and class_v2
     fname = params['common']['root_class_v1']
     folders['v1'] = folder_exists_or(fname, 'error')
+    if args.ref:
+        folders['ref_v1'] = folders['v1']
     fname = params['common']['root_class_v2']
     folders['v2'] = folder_exists_or(fname, 'error')
+    if args.ref:
+        folders['ref_v2'] = folders['v2']
 
     #Create tmp folder (for class output)
     fname = folders['main'] + 'tmp/'
@@ -208,6 +214,9 @@ def create_folders(args, params):
     fname = os.path.relpath(folders['tmp']) + '/' + folders['f_prefix']
     params['v1']['root'] = fname + 'v1_'
     params['v2']['root'] = fname + 'v2_'
+    if args.ref:
+        params['ref_v1']['root'] = fname + 'ref_v1_'
+        params['ref_v2']['root'] = fname + 'ref_v2_'
 
     #Remove roots from params
     params.pop('f_prefix', None)
@@ -216,6 +225,37 @@ def create_folders(args, params):
     params['common'].pop('root_class_v2', None)
    
     return params, folders
+
+
+def prepare_ref_params(params):
+    """
+    Prepare params for reference models
+    """
+    
+    #Extract params from common
+    for k in params['common']:
+        if k not in params['ref_v1']:
+            params['ref_v1'][k] = params['common'][k]
+        if k not in params['ref_v2']:
+            params['ref_v2'][k] = params['common'][k]
+    #Extract params from v1
+    for k in params['v1']:
+        if k not in params['ref_v1']:
+            params['ref_v1'][k] = params['v1'][k]
+    #Extract params from v2
+    for k in params['v2']:
+        if k not in params['ref_v2']:
+            params['ref_v2'][k] = params['v2'][k]
+    
+    #Remove params with value None
+    for k in params['ref_v1'].keys():
+        if 'None' in params['ref_v1'][k]:
+            params['ref_v1'].pop(k, None)
+    for k in params['ref_v2'].keys():
+        if 'None' in params['ref_v2'][k]:
+            params['ref_v2'].pop(k, None)
+    
+    return params
 
 
 def separate_fix_from_varying(params):
@@ -397,24 +437,19 @@ def clean_ini(step, folders, output):
     return
 
 
-def read_output(folders):
+def read_output(folders, v):
     """
     Read output files and return a dictionary with
     the variables for each file.
     """
     
-    #Define dict that contains the output
     output = {}
-    output['v1'] = {}
-    output['v2'] = {}
-    
     #Common prefix for all the outputs
     common = folders['tmp'] + folders['f_prefix']
     #Create dictionary for each output of class
-    for v in ['v1', 'v2']:
-        for k in gv.X_VARS.keys():
-            out = common + v + '_' + k + '.dat'
-            output[v][k] = read_output_file(out, k)
+    for k in gv.X_VARS.keys():
+        out = common + v + '_' + k + '.dat'
+        output[k] = read_output_file(out, k)
     
     return output
 
@@ -479,101 +514,6 @@ def sub_dict(txt, rules):
     return text
     
 
-#         #Open the file and read the header
-#         with open(output_file, 'r') as f:
-#             #Read each line
-#             headers = f.read().splitlines()
-#             #Select only lines that start with #
-#             headers = [x for x in headers if x[0] == '#']
-#             #Select only the last line with # (it is the line containing the headers)
-#             headers = headers[-1]
-#             #Manipulate headers to get something readable
-#             headers = re.sub('#','',headers)
-#             headers = headers.split('  ')
-#             headers = [x for x in headers if x !='']
-#             headers = [x for x in headers if x !=' ']
-#             headers = [x.strip(' ') for x in headers]
-#             headers = [x.split(':')[-1] for x in headers]
-
-# def find_common_output(v1, v2, files_to_compare, dir_files):
-#     """ Find the common files in the output folder
-# 
-#     Args:
-#         v1: dictionary containing properties of the first version of class.
-#         v2: dictionary containing properties of the second version of class.
-#         files_to_compare: name of the files to compare.
-#         dir_files: files in the output folder.
-# 
-#     Returns:
-#         List of common files.
-# 
-#     """
-# 
-#     common_output = []
-#     seen = set()
-#     for co in dir_files:
-#         co = co.split('.')[0]
-#         co = co.replace(v1['ini_name'] + '_', '')
-#         co = co.replace(v2['ini_name'] + '_', '')
-#         if co in files_to_compare:
-#             if co not in seen:
-#                 common_output.append(co)
-#                 seen.add(co)
-# 
-#     return common_output
-# 
-# 
-# 
-# def import_output(v, common_output, output_dir):
-#     """ Find the common files in the output folder
-# 
-#     Args:
-#         v: dictionary containing properties of each version of class.
-#         common_output: suffix of the files to compare.
-#         output_dir: path of the output folder.
-# 
-#     Returns:
-#         Dictionary with all the output of each file.
-# 
-#     """
-# 
-#     import numpy as np
-#     import re
-# 
-#     for co in common_output:
-#         v['output'][co] = {}
-# 
-#         #Set the name and the path of the file
-#         output_file = output_dir + v['ini_name'] + '_' + co + '.dat'
-#         #Open the file and read the values
-#         content = np.genfromtxt(output_file)
-#         #Transpose table
-#         content = content.transpose()
-#         #Open the file and read the header
-#         with open(output_file, 'r') as f:
-#             #Read each line
-#             headers = f.read().splitlines()
-#             #Select only lines that start with #
-#             headers = [x for x in headers if x[0] == '#']
-#             #Select only the last line with # (it is the line containing the headers)
-#             headers = headers[-1]
-#             #Manipulate headers to get something readable
-#             headers = re.sub('#','',headers)
-#             headers = headers.split('  ')
-#             headers = [x for x in headers if x !='']
-#             headers = [x for x in headers if x !=' ']
-#             headers = [x.strip(' ') for x in headers]
-#             headers = [x.split(':')[-1] for x in headers]
-# 
-#         #Create dictionary with the variables associated to their values
-#         for i in range(len(headers)):
-#             v['output'][co][headers[i]] = content[i]
-# 
-# 
-#     return
-# 
-# 
-# 
 # def return_max_percentage_diff(x1, y1, x2, y2):
 #     """ Return the max percentage difference for each variable of a file
 # 

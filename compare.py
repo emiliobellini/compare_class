@@ -16,16 +16,39 @@ def run(args):
     Loop over points (ii)-(iv) to sample different models
     """
     
+    #Initialize main dictionaries
+    params = {}
+    folders = {}
+    output = {}
+    
     #Read input parameters and output dictionaries
     #for them (keys: 'common', 'v1', 'v2')
     params = fs.read_input_parameters(args)
-    print params
     
     #Get output path and name
     params = fs.get_output_path_and_name(params)
     
     #Create folder structure
     params, folders = fs.create_folders(args, params)
+    
+    #Generate ref output
+    if args.ref:
+        #Prepare params for ref models
+        params = fs.prepare_ref_params(params)
+        
+        for v in ['ref_v1', 'ref_v2']:
+            #Group parameters together for each version of class
+            params[v] = fs.group_parameters(params[v])
+            
+            #Create ini files
+            folders = fs.create_ini_file(params[v], folders, v)
+            
+            #Run class
+            #fs.run_class(folders, v)
+            
+            #Read output and return a dictionary with data for each file
+            for v in ['ref_v1', 'ref_v2']:
+                output[v] = fs.read_output(folders, v)
     
     #Separate fixed params from the varying ones
     params = fs.separate_fix_from_varying(params)
@@ -64,7 +87,8 @@ def run(args):
             fs.clean_ini(step, folders, has_output)
         
         #Read output and return a dictionary with data for each file
-        output = fs.read_output(folders)
+        for v in ['v1', 'v2']:
+            output[v] = fs.read_output(folders, v)
 
 
 #    print params
@@ -85,21 +109,6 @@ def run(args):
 # import os, re
 # import numpy as np
 # import glob
-# 
-#         #Construct the dictionary that stores all the input values
-#         for k in model_params.keys():
-#             if k in input_params.keys():
-#                 input_params[k].append(model_params[k])
-#             else:
-#                 input_params[k] = [model_params[k]]
-# 
-#         #Find the common outputs of the two class runs
-#         common_output = fs.find_common_output(class_v1, class_v2, COMPARED_FILES, os.listdir(OUTPUT_TMP))
-# 
-#         #Import the output for each version of class and store it in a dictionary
-#         for v in [class_v1, class_v2]:
-#             v['output'] = {}
-#             fs.import_output(v, common_output, BASE_DIR + OUTPUT_TMP)
 # 
 #         #Initialise the variable that will contain the relative differences
 #         percentage_diffs = {}
