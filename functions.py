@@ -7,6 +7,7 @@ import random
 import subprocess
 import fnmatch
 import numpy as np
+from scipy import interpolate
 import global_variables as gv
 
 
@@ -325,19 +326,18 @@ def group_parameters(params):
     #Find keys that end with __1
     new_keys = []
     for key in params.keys():
-        if "__1" in key:
-            new_keys.append(key.strip("__1"))
-
+        if '__1' in key:
+            new_keys.append(key.strip('__1'))
+    
     for new_key in new_keys:
         count=0
         new_val = ''
         for key in params.keys():
-            if new_key in key:
+            if new_key + '__' in key:
                 count += 1
         for i in range(count):
             old_key = new_key + '__' + str(i+1)
             new_val += str(params[old_key]) + ','
-            params.pop(old_key, None)
         new_val = new_val[:-1]
         params[new_key] = new_val
     
@@ -355,7 +355,8 @@ def create_ini_file(params, folders, v):
     #Create ini file
     with open(ini_path, 'w') as f:
         for k in params.keys():
-            f.write(str(k) + ' = ' + str(params[k]) + '\n')
+            if '__' not in k:
+                f.write(str(k) + ' = ' + str(params[k]) + '\n')
     
     #Store ini path
     folders['ini_' + v] = ini_path
@@ -443,15 +444,15 @@ def read_output(folders, v):
     the variables for each file.
     """
     
-    output = {}
+    output_data = {}
     #Common prefix for all the outputs
     common = folders['tmp'] + folders['f_prefix']
     #Create dictionary for each output of class
     for k in gv.X_VARS.keys():
         out = common + v + '_' + k + '.dat'
-        output[k] = read_output_file(out, k)
+        output_data[k] = read_output_file(out, k)
     
-    return output
+    return output_data
 
 
 def read_output_file(path, loc):
@@ -461,7 +462,7 @@ def read_output_file(path, loc):
     """
     
     #Define dict that contains the output
-    output = {}
+    output_data = {}
     #Get headers
     headers = get_headers(path, loc)
     #Get content
@@ -470,15 +471,15 @@ def read_output_file(path, loc):
     #output and X_VARS or Y_VARS
     for h in gv.X_VARS[loc]:
         col = headers.index(h)
-        output[h] = content[col]
+        output_data[h] = content[col]
     for h in gv.Y_VARS[loc]:
         try:
             col = headers.index(h)
-            output[h] = content[col]
+            output_data[h] = content[col]
         except:
             pass
     
-    return output
+    return output_data
 
 def get_headers(path, loc):
     """
@@ -512,50 +513,171 @@ def sub_dict(txt, rules):
     text = pattern.sub(lambda m: rep[re.escape(m.group(0))], txt)
     
     return text
-    
 
-# def return_max_percentage_diff(x1, y1, x2, y2):
-#     """ Return the max percentage difference for each variable of a file
-# 
-#     Args:
-#         x1: array containing the values of the independend variable of class_v1.
-#         y1: array containing the values of the dependend variable of class_v1.
-#         x2: array containing the values of the independend variable of class_v2.
-#         y2: array containing the values of the dependend variable of class_v2.
-# 
-#     Returns:
-#         The maximum percentage difference between the two outputs.
-# 
-#     """
-# 
-#     import numpy as np
-#     from scipy import interpolate
-# 
-#     #Compute the minimum and maximum values of x
-#     xmin = max(min(x1),min(x2))
-#     xmax = min(max(x1),max(x2))
-# 
-#     #Interpolate linearly for [x1, y1] and [x2, y2]. Then we will calculate
-#     #the diffs w.r.t. the points of [x1, y1]
-#     data1 = interpolate.interp1d(x1,y1)
-#     data2 = interpolate.interp1d(x2,y2)
-# 
-#     #Initialise max_diff to 0.
-#     max_diff = 0.
-#     #Calculate the relative difference
-#     therange = [x for x in x1 if xmin<=x<=xmax]
-#     for x in therange:
-#         if data1(x) == 0. and data2(x) == 0.:
-#             diff = 0.
-#         else:
-#             diff = np.fabs(data2(x)/data1(x)-1.)
-#         if diff > max_diff:
-#             max_diff = diff
-# 
-#     return 100*max_diff
-# 
-# 
-# 
+
+def get_output_diffs_struct(params, output_data):
+    """
+    Return a dictionary with the same structure
+    of output_data[v]
+    """
+    
+    #Initialize dict
+    output_diffs = {}
+    
+    #Create input keys
+    output_diffs['input_params'] = {}
+    for var in params['var'].keys():
+        output_diffs['input_params'][var] = []
+    
+    #Create output keys
+    for k in output_data['v1'].keys():
+        output_diffs[k] = {}
+        for var in output_data['v1'][k].keys():
+            if var in gv.Y_VARS[k]:
+                output_diffs[k][var] = []
+    
+    
+    return output_diffs
+
+def compare_output(params, output_data, args, output_diffs):
+    """
+    Given the output return the dictionary
+    with the max percentage diff for each
+    dependent variable
+    """
+    #Initialize rel_diff key
+    output_data['rel_diff'] = {}
+    
+    #Define list of files
+    files = output_data['v1'].keys()
+    #Iterate over the various files
+    for f in files:
+        output_data['rel_diff'][f] = {}
+        #Define dependent keys for each file
+        keys = output_data['v1'][f].keys()
+        keys = [x for x in keys if x in gv.Y_VARS[f]]
+        for k in keys:
+            #Define (x, y) vars for class_v1
+            x1 = output_data['v1'][f][gv.X_VARS[f]]
+            y1 = output_data['v1'][f][k]
+            #Define (x, y) vars for class_v2
+            x2 = output_data['v2'][f][gv.X_VARS[f]]
+            y2 = output_data['v2'][f][k]
+            #If ref models calculate (x, y) of them
+            try:
+                #Define (x, y) vars for reference class_v1
+                ref_x1 = output_data['ref_v1'][f][gv.X_VARS[f]]
+                ref_y1 = output_data['ref_v1'][f][k]
+                #Define (x, y) vars for reference class_v2
+                ref_x2 = output_data['ref_v2'][f][gv.X_VARS[f]]
+                ref_y2 = output_data['ref_v2'][f][k]
+            except:
+                #If ref is not specified or does not have the
+                #requested key, assign to both refs (x1, y1).
+                #Iin this way the relative diff will be 0.
+                ref_x1, ref_y1 = x1, y1
+                ref_x2, ref_y2 = x1, y1
+            
+            #Calculate max percentage diff
+            diff = max_percentage_diff(
+            x1,
+            y1,
+            x2,
+            y2,
+            ref_x1,
+            ref_y1,
+            ref_x2,
+            ref_y2
+            )
+            
+            #Assign output value to dict
+            output_diffs[f][k].append(diff)
+    
+    #Assign input values to dict
+    for k in params['var'].keys():
+        output_diffs['input_params'][k].append(params['v1'][k])
+    
+    return output_diffs
+
+
+def max_percentage_diff(x1, y1, x2, y2, ref_x1, ref_y1, ref_x2, ref_y2):
+    """
+    Return the max percentage diff.
+    If there is a reference model,
+    subtract its percentage diffs.
+    """
+    
+    #Compute the minimum and maximum values of x
+    xmin = max(min(x1),min(x2),min(ref_x1),min(ref_x2))
+    xmax = min(max(x1),max(x2),max(ref_x1),max(ref_x2))
+    
+    #Interpolate linearly for all the data
+    data1 = interpolate.interp1d(x1,y1)
+    data2 = interpolate.interp1d(x2,y2)
+    ref_data1 = interpolate.interp1d(ref_x1,ref_y1)
+    ref_data2 = interpolate.interp1d(ref_x2,ref_y2)
+    
+    #Initialise max_diff to 0.
+    max_diff = 0.
+    #Calculate the relative difference
+    therange = [x for x in x1 if xmin<=x<=xmax]
+    for x in therange:
+        #Try to avoid numerical divergences
+        if data1(x) == 0. and data2(x) == 0.:
+            diff = 0.
+        else:
+            diff = data2(x)/data1(x)-1.
+        if ref_data1(x) == 0. and ref_data2(x) == 0.:
+            ref_diff = 0.
+        else:
+            ref_diff = ref_data2(x)/ref_data1(x)-1.
+        #Total diff
+        tot_diff = 100.*np.fabs(diff-ref_diff)
+        #Store max value
+        if tot_diff > max_diff:
+            max_diff = tot_diff
+    
+    return max_diff
+
+
+def write_output_file(output_diffs, folders, args):
+    """
+    Write the output table.
+    """
+    
+    array = []
+    header = ''
+    
+    #Number of column
+    count = 1
+    #Columns with the input parameters
+    for var in output_diffs['input_params'].keys():
+        col = output_diffs['input_params'][var]
+        array.append(col)
+        header = header + str(count) + ':' + var + '    '
+        count = count + 1
+    
+    #Columns with the output parameters
+    for k in output_diffs.keys():
+        if 'input_params' not in k:
+            for var in output_diffs[k].keys():
+                col = output_diffs[k][var]
+                array.append(col)
+                header = header + str(count) + ':' + k + ':' + var + '    '
+                count = count + 1
+    
+    #Transpose array
+    array = np.transpose(array)
+    #File name
+    fname = folders['main'] + folders['f_prefix'] + 'output.dat'
+    #Save file
+    np.savetxt(fname, array, header = header, delimiter='    ', fmt='%10.5e')
+    
+    return
+
+
+
+
 # def generate_plots(data, output_dir):
 #     """ Generate and save scatter plots for all the output data
 # 
