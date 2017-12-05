@@ -49,11 +49,10 @@ def run(args):
             fs.run_class(folders, v)
     
             #Read output and return a dictionary with data for each file
-            for v in ['ref_v1', 'ref_v2']:
-                try:
-                    output_data[v] = fs.read_output(folders, v)
-                except:
-                    raise IOError('--------> No ref output found!')
+            try:
+                output_data[v] = fs.read_output(folders, v)
+            except:
+                raise IOError('--------> No ref output found!')
     
     #Separate fixed params from the varying ones
     params = fs.separate_fix_from_varying(params)
