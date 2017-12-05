@@ -19,6 +19,7 @@ def run(args):
     #Read input parameters and output dictionaries
     #for them (keys: 'common', 'v1', 'v2')
     params = fs.read_input_parameters(args)
+    print params
     
     #Get output path and name
     params = fs.get_output_path_and_name(params)

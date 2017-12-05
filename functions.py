@@ -58,28 +58,34 @@ def read_input_parameters(args):
     """
     Read the input parameters.
     
-    Return a dict with the parameters (keys: 'common', 'v1', 'v2').
+    Return a dict with the parameters (keys: 'common', 'v1', 'v2', 'ref').
     """
     
     #Define the main dictionary params
     params = {}
     
-    #Define three different dictionaries for parameters
+    #Define three (four) different dictionaries for parameters
     params['common'] = {}
     params['v1'] = {}
     params['v2'] = {}
+    if args.ref:
+        params['ref'] = {}
     
     #Read the common parameters
     params['common'] = read_ini_file(args.input_file)
     
     #Read parameters for class_v1
-    if args.params_v1 is not None:
+    if args.params_v1:
         params['v1'] = read_ini_file(args.params_v1)
     
     #Read parameters for class_v2
-    if args.params_v2 is not None:
+    if args.params_v2:
         params['v2'] = read_ini_file(args.params_v2)
     
+    #Read parameters for reference model
+    if args.ref:
+        params['ref'] = read_ini_file(args.ref)
+
     return params
 
 
