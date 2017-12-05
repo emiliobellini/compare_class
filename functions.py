@@ -6,6 +6,7 @@ import argparse
 import random
 import subprocess
 import fnmatch
+import numpy as np
 import global_variables as gv
 
 
@@ -320,10 +321,8 @@ def run_class(folders, v):
     """
     #Get the path to class
     class_path = folders[v] + 'class'
-    #Get the path to the ini file
-    ini_path = folders['main'] + folders['f_prefix'] + v + '.ini'
     #Run class
-    subprocess.call([class_path, ini_path])
+    subprocess.call([class_path, folders['ini_' + v]])
     
     return
 
@@ -388,6 +387,105 @@ def clean_ini(step, folders, output):
             os.remove(folders[v])
     
     return
+
+
+def read_output(folders):
+    """
+    Read output files and return a dictionary with
+    the variables for each file.
+    """
+    
+    #Define dict that contains the output
+    output = {}
+    output['v1'] = {}
+    output['v2'] = {}
+    
+    #Common prefix for all the outputs
+    common = folders['tmp'] + folders['f_prefix']
+    #Create dictionary for each output of class
+    for v in ['v1', 'v2']:
+        for k in gv.X_VARS.keys():
+            out = common + v + '_' + k + '.dat'
+            output[v][k] = read_output_file(out, k)
+    
+    return output
+
+
+def read_output_file(path, loc):
+    """
+    Given the path of a file read the necessary columns
+    and store the values in a dictionary
+    """
+    
+    #Define dict that contains the output
+    output = {}
+    #Get headers
+    headers = get_headers(path, loc)
+    #Get content
+    content = np.genfromtxt(path).transpose()
+    #Create dictionaries with keys that are both in the
+    #output and X_VARS or Y_VARS
+    for h in gv.X_VARS[loc]:
+        col = headers.index(h)
+        output[h] = content[col]
+    for h in gv.Y_VARS[loc]:
+        try:
+            col = headers.index(h)
+            output[h] = content[col]
+        except:
+            pass
+    
+    return output
+
+def get_headers(path, loc):
+    """
+    Given a file path, get the headers of that file
+    """
+    
+    with open(path, 'r') as f:
+        headers = f.read().splitlines()
+    headers = [x for x in headers if x[0] == '#']
+    headers = headers[-1]
+    headers = re.sub('#','',headers)
+    headers = re.split('\d+:', headers)
+    headers = [x.strip() for x in headers]
+    headers = [x for x in headers if x !='']
+    try:
+        headers = [sub_dict(x, gv.DICTIONARY[loc]) for x in headers]
+    except:
+        pass
+    
+    return headers
+
+
+def sub_dict(txt, rules):
+    """
+    Given a string, substitute the rules contained
+    in dict.
+    """
+    
+    rep = dict((re.escape(k), v) for k, v in rules.iteritems())
+    pattern = re.compile("|".join(rep.keys()))
+    text = pattern.sub(lambda m: rep[re.escape(m.group(0))], txt)
+    
+    return text
+    
+
+#         #Open the file and read the header
+#         with open(output_file, 'r') as f:
+#             #Read each line
+#             headers = f.read().splitlines()
+#             #Select only lines that start with #
+#             headers = [x for x in headers if x[0] == '#']
+#             #Select only the last line with # (it is the line containing the headers)
+#             headers = headers[-1]
+#             #Manipulate headers to get something readable
+#             headers = re.sub('#','',headers)
+#             headers = headers.split('  ')
+#             headers = [x for x in headers if x !='']
+#             headers = [x for x in headers if x !=' ']
+#             headers = [x.strip(' ') for x in headers]
+#             headers = [x.split(':')[-1] for x in headers]
 
 # def find_common_output(v1, v2, files_to_compare, dir_files):
 #     """ Find the common files in the output folder
