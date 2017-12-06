@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+import shutil
 import argparse
 import random
 import subprocess
@@ -210,6 +211,25 @@ def create_folders(args, params):
     if args.want_plots:
         fname = folders['main'] + 'plots/'
         folders['plots'] = folder_exists_or(fname, 'create')
+    
+    #Create input folder and store input files
+    fname = folders['main'] + 'input_files/'
+    folders['input_files'] = folder_exists_or(fname, 'create')
+    fold = os.path.abspath('.') + '/' + args.input_file
+    fnew = folders['input_files'] + args.input_file
+    shutil.copy2(fold, fnew)
+    if args.params_v1:
+        fold = os.path.abspath('.') + '/' + args.params_v1
+        fnew = folders['input_files'] + args.params_v1
+        shutil.copy2(fold, fnew)
+    if args.params_v2:
+        fold = os.path.abspath('.') + '/' + args.params_v2
+        fnew = folders['input_files'] + args.params_v2
+        shutil.copy2(fold, fnew)
+    if args.ref:
+        fold = os.path.abspath('.') + '/' + args.ref
+        fnew = folders['input_files'] + args.ref
+        shutil.copy2(fold, fnew)
     
     #Assign to params of each version of class the relative path of
     #the tmp folder, which will be used by class to store the outputs
