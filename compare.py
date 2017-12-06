@@ -21,7 +21,8 @@ def run(args):
     params = {}
     folders = {}
     output_data = {}
-    output_diffs = {}
+    output_diff = {}
+    output_diff_ref = {}
     
     #Read input parameters and output dictionaries
     #for them (keys: 'common', 'v1', 'v2')
@@ -99,11 +100,15 @@ def run(args):
         for v in ['v1', 'v2']:
             output_data[v] = fs.read_output(folders, v)
     
-        #Initialize structure of output_diffs
-        if not output_diffs:
-            output_diffs = fs.get_output_diffs_struct(params, output_data)
+        #Initialize structure of output_diff
+        if not output_diff:
+            output_diff = fs.get_output_diff_struct(params, output_data)
         #Compare output
-        fs.compare_output(params, output_data, args, output_diffs)
+        fs.compare_output(params, output_data, output_diff)
+        #Compare reference and store in output_diff_ref
+        if args.ref and not output_diff_ref:
+            output_diff_ref = fs.get_output_diff_struct(params, output_data)
+            fs.compare_output(params, output_data, output_diff_ref, mode='ref')
     
         #Remove tmp output files
         for file in os.listdir(folders['tmp']):
@@ -114,17 +119,26 @@ def run(args):
         sys.stdout.flush()
     
     #Write output
-    output_path = fs.write_output_file(output_diffs, folders, args)
+    output_path = fs.write_output_file(output_diff, folders)
     print 'Saved output table in ' + os.path.relpath(output_path)
+    #Write output ref
+    if args.ref:
+        output_path = fs.write_output_file(output_diff_ref, folders, mode='ref')
+        print 'Saved output ref table in ' + os.path.relpath(output_path)
     
     #If requested, generate plots
     if args.want_plots:
-        #File name and path
-        fname = folders['main'] + folders['f_prefix'] + 'output.dat'
         #Read output table
+        fname = folders['main'] + folders['f_prefix'] + 'output.dat'
         data_plots = fs.read_output_table(fname)
+        #Read output table for ref
+        fname = folders['main'] + folders['f_prefix'] + 'ref_output.dat'
+        try:
+            data_plots_ref = fs.read_output_table(fname)
+        except:
+            data_plots_ref = None
         #Generate plots
-        fs.generate_plots(data_plots, folders['plots'])
+        fs.generate_plots(data_plots, data_plots_ref, folders['plots'])
         print 'Saved figures in ' + os.path.relpath(folders['plots'])
         sys.stdout.flush()
     

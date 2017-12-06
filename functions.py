@@ -553,89 +553,97 @@ def sub_dict(txt, rules):
     return text
 
 
-def get_output_diffs_struct(params, output_data):
+def get_output_diff_struct(params, output_data):
     """
     Return a dictionary with the same structure
     of output_data[v]
     """
     
     #Initialize dict
-    output_diffs = {}
+    output_diff = {}
     
     #Create input keys
-    output_diffs['input_params'] = {}
+    output_diff['input_params'] = {}
     for var in params['var'].keys():
-        output_diffs['input_params'][var] = []
+        output_diff['input_params'][var] = []
     
     #Create output keys
     for k in output_data['v1'].keys():
-        output_diffs[k] = {}
+        output_diff[k] = {}
         for var in output_data['v1'][k].keys():
             if var in gv.Y_VARS[k]:
-                output_diffs[k][var] = []
+                output_diff[k][var] = []
     
     
-    return output_diffs
+    return output_diff
 
-def compare_output(params, output_data, args, output_diffs):
+
+def compare_output(params, output_data, output_diff, mode='all'):
     """
-    Given the output return the dictionary
+    Given the ref output return the dictionary
     with the max percentage diff for each
     dependent variable
     """
-    #Initialize rel_diff key
-    output_data['rel_diff'] = {}
     
     #Define list of files
     files = output_data['v1'].keys()
     #Iterate over the various files
     for f in files:
-        output_data['rel_diff'][f] = {}
         #Define dependent keys for each file
         keys = output_data['v1'][f].keys()
         keys = [x for x in keys if x in gv.Y_VARS[f]]
         for k in keys:
-            #Define (x, y) vars for class_v1
-            x1 = output_data['v1'][f][gv.X_VARS[f]]
-            y1 = output_data['v1'][f][k]
-            #Define (x, y) vars for class_v2
-            x2 = output_data['v2'][f][gv.X_VARS[f]]
-            y2 = output_data['v2'][f][k]
-            #If ref models calculate (x, y) of them
-            try:
-                #Define (x, y) vars for reference class_v1
-                ref_x1 = output_data['ref_v1'][f][gv.X_VARS[f]]
-                ref_y1 = output_data['ref_v1'][f][k]
-                #Define (x, y) vars for reference class_v2
-                ref_x2 = output_data['ref_v2'][f][gv.X_VARS[f]]
-                ref_y2 = output_data['ref_v2'][f][k]
-            except:
-                #If ref is not specified or does not have the
-                #requested key, assign to both refs (x1, y1).
-                #Iin this way the relative diff will be 0.
-                ref_x1, ref_y1 = x1, y1
-                ref_x2, ref_y2 = x1, y1
-            
             #Calculate max percentage diff
-            diff = max_percentage_diff(
-            x1,
-            y1,
-            x2,
-            y2,
-            ref_x1,
-            ref_y1,
-            ref_x2,
-            ref_y2
-            )
+            if mode is 'all':
+                #Try to calculate the percentage diff with ref,
+                #otherwise the ref differences are not subtracted.
+                try:
+                    diff = max_percentage_diff(
+                    output_data['v1'][f][gv.X_VARS[f]],
+                    output_data['v1'][f][k],
+                    output_data['v2'][f][gv.X_VARS[f]],
+                    output_data['v2'][f][k],
+                    output_data['ref_v1'][f][gv.X_VARS[f]],
+                    output_data['ref_v1'][f][k],
+                    output_data['ref_v2'][f][gv.X_VARS[f]],
+                    output_data['ref_v2'][f][k]
+                    )
+                except:
+                    diff = max_percentage_diff(
+                    output_data['v1'][f][gv.X_VARS[f]],
+                    output_data['v1'][f][k],
+                    output_data['v2'][f][gv.X_VARS[f]],
+                    output_data['v2'][f][k],
+                    output_data['v1'][f][gv.X_VARS[f]],
+                    output_data['v1'][f][gv.X_VARS[f]],
+                    output_data['v1'][f][gv.X_VARS[f]],
+                    output_data['v1'][f][gv.X_VARS[f]]
+                    )
+            elif mode is 'ref':
+                #Try to calculate the percentage diff of ref,
+                #otherwise error.
+                try:
+                    diff = max_percentage_diff(
+                    output_data['ref_v1'][f][gv.X_VARS[f]],
+                    output_data['ref_v1'][f][k],
+                    output_data['ref_v2'][f][gv.X_VARS[f]],
+                    output_data['ref_v2'][f][k],
+                    output_data['v1'][f][gv.X_VARS[f]],
+                    output_data['v1'][f][gv.X_VARS[f]],
+                    output_data['v1'][f][gv.X_VARS[f]],
+                    output_data['v1'][f][gv.X_VARS[f]]
+                    )
+                except:
+                    raise IOError('--------> Reference model not found!')
             
             #Assign output value to dict
-            output_diffs[f][k].append(diff)
+            output_diff[f][k].append(diff)
     
     #Assign input values to dict
     for k in params['var'].keys():
-        output_diffs['input_params'][k].append(params['v1'][k])
+        output_diff['input_params'][k].append(params['v1'][k])
     
-    return output_diffs
+    return output_diff
 
 
 def max_percentage_diff(x1, y1, x2, y2, ref_x1, ref_y1, ref_x2, ref_y2):
@@ -678,7 +686,7 @@ def max_percentage_diff(x1, y1, x2, y2, ref_x1, ref_y1, ref_x2, ref_y2):
     return max_diff
 
 
-def write_output_file(output_diffs, folders, args):
+def write_output_file(output_diff, folders, mode='all'):
     """
     Write the output table.
     """
@@ -689,17 +697,17 @@ def write_output_file(output_diffs, folders, args):
     #Number of column
     count = 1
     #Columns with the input parameters
-    for var in output_diffs['input_params'].keys():
-        col = output_diffs['input_params'][var]
+    for var in output_diff['input_params'].keys():
+        col = output_diff['input_params'][var]
         array.append(col)
         header = header + str(count) + ':' + var + '    '
         count = count + 1
     
     #Columns with the output parameters
-    for k in output_diffs.keys():
+    for k in output_diff.keys():
         if 'input_params' not in k:
-            for var in output_diffs[k].keys():
-                col = output_diffs[k][var]
+            for var in output_diff[k].keys():
+                col = output_diff[k][var]
                 array.append(col)
                 header = header + str(count) + ':' + k + ':' + var + '    '
                 count = count + 1
@@ -707,9 +715,13 @@ def write_output_file(output_diffs, folders, args):
     #Transpose array
     array = np.transpose(array)
     #File name
-    fname = folders['main'] + folders['f_prefix'] + 'output.dat'
+    if mode is 'all':
+        fname = folders['main'] + folders['f_prefix'] + 'output.dat'
+    if mode is 'ref':
+        fname = folders['main'] + folders['f_prefix'] + 'ref_output.dat'
+
     #Save file
-    np.savetxt(fname, array, header = header, delimiter='    ', fmt='%10.5e')
+    np.savetxt(fname, array, header=header, delimiter='    ', fmt='%10.5e')
     
     return fname
 
@@ -749,7 +761,7 @@ def read_output_table(fname):
     return data_plots
 
 
-def generate_plots(data, folder):
+def generate_plots(data, data_ref, folder):
     """
     Generate and save scatter plots for all the output data
     """
@@ -770,7 +782,10 @@ def generate_plots(data, folder):
         #Generate labels
         plt.xlabel('N')
         plt.ylabel('diff. [%]')
-        plt.title(k)
+        if data_ref:
+            plt.title(k + '  (diff_ref = ' + '%.2e' % data_ref[k] + '%)')
+        else:
+            plt.title(k)
         
         #Generate scatter plot
         plt.scatter(x, y, s=10)
