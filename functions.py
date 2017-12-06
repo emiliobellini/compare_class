@@ -53,6 +53,14 @@ def argument_parser():
     update_parser.add_argument('input_file', type=str, help='Input file')
     update_parser.add_argument('output_dir', type=str,
     help='Folder where the output is stored')
+    update_parser.add_argument('--params-v1', type=str, default = None,
+    help='Input file only for class-v1')
+    update_parser.add_argument('--params-v2', type=str, default = None,
+    help='Input file only for class-v2')
+    update_parser.add_argument('--ref', type=str, default = None,
+    help='Reference ini file')
+    update_parser.add_argument('--want-plots', action='store_true',
+    help='Generate plots from the output')
 
     #Arguments for 'info'
     info_parser.add_argument('output_dir', type=str,

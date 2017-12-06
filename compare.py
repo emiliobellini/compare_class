@@ -148,6 +148,10 @@ def run(args):
 
 
 
+def update(args):
+    return
+
+
 def info(args):
     """
     Given the output folder generate plots
