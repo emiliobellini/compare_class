@@ -230,19 +230,19 @@ def create_folders(args, params):
     fname = folders['main'] + 'input_files/'
     folders['input_files'] = folder_exists_or(fname, 'create')
     fold = os.path.abspath('.') + '/' + args.input_file
-    fnew = folders['input_files'] + args.input_file
+    fnew = folders['input_files'] + args.input_file.split('/')[-1]
     shutil.copy2(fold, fnew)
     if args.params_v1:
         fold = os.path.abspath('.') + '/' + args.params_v1
-        fnew = folders['input_files'] + args.params_v1
+        fnew = folders['input_files'] + args.params_v1.split('/')[-1]
         shutil.copy2(fold, fnew)
     if args.params_v2:
         fold = os.path.abspath('.') + '/' + args.params_v2
-        fnew = folders['input_files'] + args.params_v2
+        fnew = folders['input_files'] + args.params_v2.split('/')[-1]
         shutil.copy2(fold, fnew)
     if args.ref:
         fold = os.path.abspath('.') + '/' + args.ref
-        fnew = folders['input_files'] + args.ref
+        fnew = folders['input_files'] + args.ref.split('/')[-1]
         shutil.copy2(fold, fnew)
     
     #Assign to params of each version of class the relative path of
