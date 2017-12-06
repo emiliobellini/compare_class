@@ -45,7 +45,7 @@ def run(args):
             #Create ini files
             folders = fs.create_ini_file(params[v], folders, v)
     
-            #Run class TODO: uncomment this
+            #Run class
             fs.run_class(folders, v)
     
             #Read output and return a dictionary with data for each file
@@ -66,7 +66,6 @@ def run(args):
     
         #Only if has_output is 2 (both codes generated output)
         #exit the loop. Otherwise repeat the loop with new params.
-        #TODO: reset to 0
         has_output = 0
         while has_output is not 2:
     
@@ -106,9 +105,9 @@ def run(args):
         #Compare output
         fs.compare_output(params, output_data, args, output_diffs)
     
-        #Remove tmp output files TODO: uncomment this
-        # for file in os.listdir(folders['tmp']):
-        #     os.remove(folders['tmp'] + file)
+        #Remove tmp output files
+        for file in os.listdir(folders['tmp']):
+            os.remove(folders['tmp'] + file)
     
         #Print to screen the end of this iteration
         print 'Completed run ' + str(step) + ' of ' + str(args.N)
@@ -128,6 +127,21 @@ def run(args):
         fs.generate_plots(data_plots, folders['plots'])
         print 'Saved figures in ' + os.path.relpath(folders['plots'])
         sys.stdout.flush()
+    
+    #Clean output files and folders
+    try:
+        os.remove(folders['ini_ref_v1'])
+        os.remove(folders['ini_ref_v2'])
+    except:
+        pass
+    try:
+        os.rmdir(folders['tmp'])
+    except:
+        pass
+    try:
+        os.rmdir(folders['ini_to_check'])
+    except:
+        pass
 
 
     return
