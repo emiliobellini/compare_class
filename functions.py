@@ -484,8 +484,11 @@ def read_output(folders, v):
     common = folders['tmp'] + folders['f_prefix']
     #Create dictionary for each output of class
     for k in gv.X_VARS.keys():
-        out = common + v + '_' + k + '.dat'
-        output_data[k] = read_output_file(out, k)
+        try:
+            out = common + v + '_' + k + '.dat'
+            output_data[k] = read_output_file(out, k)
+        except:
+            pass
     
     return output_data
 
