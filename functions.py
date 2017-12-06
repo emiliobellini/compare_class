@@ -44,7 +44,7 @@ def argument_parser():
     help='Input file only for class-v2')
     run_parser.add_argument('--ref', type=str, default = None,
     help='Reference ini file')
-    run_parser.add_argument('-N', type=int, default=1,
+    run_parser.add_argument('-N', type=int, default=2,
     help='Number of iterations (default = 1)')
     run_parser.add_argument('--want-plots', action='store_true',
     help='Generate plots from the output')
