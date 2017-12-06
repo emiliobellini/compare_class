@@ -171,22 +171,33 @@ def info(args):
     Given the output folder generate plots
     """
     
+    import re
+    
+    name = args.output_dir.split('/')[-1]
+    path = args.output_dir.split('/')[:-1]
+    path = '/'.join(path)
     #Output path
-    output_path = fs.folder_exists_or(args.output_dir, mod='error')
+    output = fs.folder_exists_or(path, mod='error')
     #Table path
-    table_path = output_path + output_path.split('/')[-2] + '_output.dat'
+    table = output + name + 'output.dat'
+    #Table path
+    table_ref = output + name + 'ref_output.dat'
     #Plots path
-    plots_path = fs.folder_exists_or(output_path + 'plots/', mod='create')
+    plots = fs.folder_exists_or(output + 'plots/', mod='create')
     
     #Try to read output table, otherwise error
     try:
-        data_plots = fs.read_output_table(table_path)
+        data_plots = fs.read_output_table(table)
     except:
         raise IOError('--------> Output table not found!')
+    try:
+        data_plots_ref = fs.read_output_table(table_ref)
+    except:
+        data_plots_ref = None
     
     #Generate plots
-    fs.generate_plots(data_plots, plots_path)
-    print 'Saved figures in ' + os.path.relpath(plots_path)
+    fs.generate_plots(data_plots, data_plots_ref, plots)
+    print 'Saved figures in ' + os.path.relpath(plots)
     sys.stdout.flush()
 
     
