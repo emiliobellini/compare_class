@@ -3,20 +3,23 @@
 
 #Independent variables for each file
 X_VARS = {
-'background': 'z',
-'cl': 'l',
-'pk': 'k'}
+    'background': 'z',
+    'cl': 'l',
+    'pk': 'k'
+}
 
 #Dependent variables for each file
 Y_VARS = {
-'background': ['H'],
-'cl': ['TT', 'EE'],
-'pk': ['P']}
+    'background': ['H'],
+    'cl': ['TT', 'EE'],
+    'pk': ['P']
+}
 
 #Dictionary between names of variables as written in the class output,
 #and names given internally in this code
 DICTIONARY = {
-'background': {'H [1/Mpc]' : 'H'},
-'pk': {'k (h/Mpc)' : 'k',
-'P (Mpc/h)^3' : 'P'}
+    'background': {'H [1/Mpc]' : 'H'},
+    'pk': {'k (h/Mpc)' : 'k',
+           'P (Mpc/h)^3' : 'P'
+          }
 }

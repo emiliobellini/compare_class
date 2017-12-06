@@ -20,22 +20,22 @@ def argument_parser():
         a class with the given arguments
 
     """
-    
+
     parser = argparse.ArgumentParser(
     'Compare the output of two different versions of (hi_)class. Useful to:\n'
     ' (i) check that a new version of the code does not introduce new bugs;\n'
     '(ii) check the differences introduced varying the precision parameters.\n'
     )
-    
+
     #Add supbarser to select between run and info modes.
     subparsers = parser.add_subparsers(dest='mode',
     help='Either "run", to run the sampler and optionally generate '
     'the plots, or "info", to just generate the plots.')
-    
+
     run_parser = subparsers.add_parser('run')
     update_parser = subparsers.add_parser('update')
     info_parser = subparsers.add_parser('info')
-    
+
     #Arguments for 'run'
     run_parser.add_argument('input_file', type=str, help='Input file')
     run_parser.add_argument('--params-v1', type=str, default = None,
@@ -48,7 +48,7 @@ def argument_parser():
     help='Number of iterations (default = 1)')
     run_parser.add_argument('--want-plots', action='store_true',
     help='Generate plots from the output')
-    
+
     #Arguments for update
     update_parser.add_argument('input_file', type=str, help='Input file')
     update_parser.add_argument('output_dir', type=str,
@@ -67,20 +67,20 @@ def argument_parser():
     help='Folder where the output is stored')
 
     args = parser.parse_args()
-    
+
     return args
 
 
 def read_input_parameters(args):
     """
     Read the input parameters.
-    
+
     Return a dict with the parameters (keys: 'common', 'v1', 'v2', 'ref').
     """
-    
+
     #Define the main dictionary params
     params = {}
-    
+
     #Define different dictionaries for parameters
     params['common'] = {}
     params['v1'] = {}
@@ -88,18 +88,18 @@ def read_input_parameters(args):
     if args.ref:
         params['ref_v1'] = {}
         params['ref_v2'] = {}
-    
+
     #Read the common parameters
     params['common'] = read_ini_file(args.input_file)
-    
+
     #Read parameters for class_v1
     if args.params_v1:
         params['v1'] = read_ini_file(args.params_v1)
-    
+
     #Read parameters for class_v2
     if args.params_v2:
         params['v2'] = read_ini_file(args.params_v2)
-    
+
     #Read parameters for reference model
     if args.ref:
         params['ref_v1'] = read_ini_file(args.ref)
@@ -111,18 +111,18 @@ def read_input_parameters(args):
 def read_ini_file(fname):
     """
     Open and read an imput file.
-    
+
     Return a dict with the parameters in that file.
     """
-    
+
     #Initialise dict
     params = {}
-    
+
     #Check if file exists and return its absolute path
     path_file = os.path.abspath(fname)
     if not os.path.exists(path_file):
         raise IOError('The file ' + fname + ' does not exist!')
-    
+
     #Read each line of the file
     with open(path_file, "r") as f:
         for line in f:
@@ -136,7 +136,7 @@ def read_ini_file(fname):
                 val = val.strip()
                 #Assign to dict key and value
                 params[key] = val
-    
+
     return params
 
 
@@ -144,11 +144,11 @@ def get_output_path_and_name(params):
     """
     Extract from the params dict the output path and the prefix
     for all the output files.
-    
+
     Return the params dict with the output folder split into
     'root' and 'f_prefix'.
     """
-    
+
     #Extract the output folder and file prefix from params
     if 'root_output' in params['common'].keys():
         params['root'] = params['common']['root_output'].split('/')
@@ -156,10 +156,10 @@ def get_output_path_and_name(params):
         params['root'] = '/'.join(params['root'][:-1]) + '/'
     else:
         raise IOError('No root_output in the parameter file')
-    
+
     #Remove the old 'root_output' key from params
     params['common'].pop('root_output', None)
-    
+
     return params
 
 
@@ -194,7 +194,7 @@ def create_folders(args, params):
 
     #Define folders dict
     folders = {}
-    
+
     #Create key for the file prefix
     folders['f_prefix'] = params['f_prefix']
 
@@ -225,7 +225,7 @@ def create_folders(args, params):
     if args.want_plots:
         fname = folders['main'] + 'plots/'
         folders['plots'] = folder_exists_or(fname, 'create')
-    
+
     #Create input folder and store input files
     fname = folders['main'] + 'input_files/'
     folders['input_files'] = folder_exists_or(fname, 'create')
@@ -244,7 +244,7 @@ def create_folders(args, params):
         fold = os.path.abspath('.') + '/' + args.ref
         fnew = folders['input_files'] + args.ref.split('/')[-1]
         shutil.copy2(fold, fnew)
-    
+
     #Assign to params of each version of class the relative path of
     #the tmp folder, which will be used by class to store the outputs
     fname = os.path.relpath(folders['tmp']) + '/' + folders['f_prefix']
@@ -259,7 +259,7 @@ def create_folders(args, params):
     params.pop('root', None)
     params['common'].pop('root_class_v1', None)
     params['common'].pop('root_class_v2', None)
-   
+
     return params, folders
 
 
@@ -267,7 +267,7 @@ def prepare_ref_params(params):
     """
     Prepare params for reference models
     """
-    
+
     #Extract params from common
     for k in params['common']:
         if k not in params['ref_v1']:
@@ -282,7 +282,7 @@ def prepare_ref_params(params):
     for k in params['v2']:
         if k not in params['ref_v2']:
             params['ref_v2'][k] = params['v2'][k]
-    
+
     #Remove params with value None
     for k in params['ref_v1'].keys():
         if 'None' in params['ref_v1'][k]:
@@ -290,19 +290,19 @@ def prepare_ref_params(params):
     for k in params['ref_v2'].keys():
         if 'None' in params['ref_v2'][k]:
             params['ref_v2'].pop(k, None)
-    
+
     return params
 
 
 def separate_fix_from_varying(params):
     """
     Restructure the params dict.
-    
+
     Divide the 'common' params into fixed and varying.
     Fixed params are copied in both 'v1' and 'v2'.
     Varying are copied in 'var'. 'common' is removed.
     """
-    
+
     #Initialize key var, where all the varying params
     #are stored.
     params['var'] = {}
@@ -313,23 +313,23 @@ def separate_fix_from_varying(params):
             try:
                 float(val[0].strip())
                 float(val[1].strip())
-                
+
                 params['var'][key] = params['common'][key]
             except:
                 pass
-    
+
     #Remove the varying keys from 'common'
     for key in params['var'].keys():
         params['common'].pop(key, None)
-    
+
     #Copy fixed keys from 'common' to 'v1' and 'v2'
     for key in params['common'].keys():
         params['v1'][key] = params['common'][key]
         params['v2'][key] = params['common'][key]
-    
+
     #Remove the 'common' key
     params.pop('common', None)
-    
+
     return params
 
 
@@ -338,7 +338,7 @@ def generate_random_params(params):
     Return the params dict with random values
     instead of ranges.
     """
-    
+
     for key in params['var']:
         val = params['var'][key].split(',')
         xmin = float(val[0].strip())
@@ -346,7 +346,7 @@ def generate_random_params(params):
         rnd = random.uniform(xmin, xmax)
         params['v1'][key] = rnd
         params['v2'][key] = rnd
-    
+
     return params
 
 
@@ -354,16 +354,16 @@ def group_parameters(params):
     """
     Group params together to respect the
     (hi_)class syntax.
-    
+
     Return an updated dict of params.
     """
-    
+
     #Find keys that end with __1
     new_keys = []
     for key in params.keys():
         if '__1' in key:
             new_keys.append(key.strip('__1'))
-    
+
     for new_key in new_keys:
         count=0
         new_val = ''
@@ -375,7 +375,7 @@ def group_parameters(params):
             new_val += str(params[old_key]) + ','
         new_val = new_val[:-1]
         params[new_key] = new_val
-    
+
     return params
 
 
@@ -385,14 +385,14 @@ def create_ini_file(params, folders, v):
     and write it in the output folder.
     Store the ini path in folders.
     """
-    
+
     ini_path = folders['main'] + folders['f_prefix'] + v + '.ini'
     #Create ini file
     with open(ini_path, 'w') as f:
         for k in params.keys():
             if '__' not in k:
                 f.write(str(k) + ' = ' + str(params[k]) + '\n')
-    
+
     #Store ini path
     folders['ini_' + v] = ini_path
 
@@ -407,7 +407,7 @@ def run_class(folders, v):
     class_path = folders[v] + 'class'
     #Run class
     subprocess.call([class_path, folders['ini_' + v]])
-    
+
     return
 
 
@@ -416,7 +416,7 @@ def has_output(folders, v, output):
     Check if run_class generated the requested output
     and return True or False
     """
-    
+
     #File name to match to check if output was generated
     fname = folders['f_prefix'] + v + '*'
     #List of files matching the pattern fname
@@ -424,7 +424,7 @@ def has_output(folders, v, output):
     #Add to output 1 if the list is not empty
     if match:
         output = output + 1
-    
+
     return output
 
 
@@ -432,7 +432,7 @@ def print_messages(output):
     """
     Print messages about the status of the previous run.
     """
-    
+
     #If no output print message
     if output is 0:
         print '--------> Both (hi_)class versions failed to run'
@@ -445,7 +445,7 @@ def print_messages(output):
     elif output is 2:
         print '----> Success! Output from both the (hi_)class versions'
         sys.stdout.flush()
-    
+
     return
 
 
@@ -455,11 +455,11 @@ def clean_ini(step, folders, output):
     store the ini files in the ini_to_check/ folder,
     otherwise delete them.
     """
-    
+
     #Define folders
     main = folders['main']
     ini = folders['ini_to_check']
-    
+
     for v in ['ini_v1', 'ini_v2']:
         #If one output store ini files
         if output is 1:
@@ -469,7 +469,7 @@ def clean_ini(step, folders, output):
             os.rename(folders[v], new_ini)
         else:
             os.remove(folders[v])
-    
+
     return
 
 
@@ -478,7 +478,7 @@ def read_output(folders, v):
     Read output files and return a dictionary with
     the variables for each file.
     """
-    
+
     output_data = {}
     #Common prefix for all the outputs
     common = folders['tmp'] + folders['f_prefix']
@@ -489,7 +489,7 @@ def read_output(folders, v):
             output_data[k] = read_output_file(out, k)
         except:
             pass
-    
+
     return output_data
 
 
@@ -498,7 +498,7 @@ def read_output_file(path, loc):
     Given the path of a file read the necessary columns
     and store the values in a dictionary
     """
-    
+
     #Define dict that contains the output
     output_data = {}
     #Get headers
@@ -516,14 +516,14 @@ def read_output_file(path, loc):
             output_data[h] = content[col]
         except:
             pass
-    
+
     return output_data
 
 def get_headers(path, loc):
     """
     Given a file path, get the headers of that file
     """
-    
+
     with open(path, 'r') as f:
         headers = f.read().splitlines()
     headers = [x for x in headers if x[0] == '#']
@@ -536,7 +536,7 @@ def get_headers(path, loc):
         headers = [sub_dict(x, gv.DICTIONARY[loc]) for x in headers]
     except:
         pass
-    
+
     return headers
 
 
@@ -545,11 +545,11 @@ def sub_dict(txt, rules):
     Given a string, substitute the rules contained
     in dict.
     """
-    
+
     rep = dict((re.escape(k), v) for k, v in rules.iteritems())
     pattern = re.compile("|".join(rep.keys()))
     text = pattern.sub(lambda m: rep[re.escape(m.group(0))], txt)
-    
+
     return text
 
 
@@ -558,23 +558,23 @@ def get_output_diff_struct(params, output_data):
     Return a dictionary with the same structure
     of output_data[v]
     """
-    
+
     #Initialize dict
     output_diff = {}
-    
+
     #Create input keys
     output_diff['input_params'] = {}
     for var in params['var'].keys():
         output_diff['input_params'][var] = []
-    
+
     #Create output keys
     for k in output_data['v1'].keys():
         output_diff[k] = {}
         for var in output_data['v1'][k].keys():
             if var in gv.Y_VARS[k]:
                 output_diff[k][var] = []
-    
-    
+
+
     return output_diff
 
 
@@ -584,7 +584,7 @@ def compare_output(params, output_data, output_diff, mode='all'):
     with the max percentage diff for each
     dependent variable
     """
-    
+
     #Define list of files
     files = output_data['v1'].keys()
     #Iterate over the various files
@@ -635,14 +635,14 @@ def compare_output(params, output_data, output_diff, mode='all'):
                     )
                 except:
                     raise IOError('--------> Reference model not found!')
-            
+
             #Assign output value to dict
             output_diff[f][k].append(diff)
-    
+
     #Assign input values to dict
     for k in params['var'].keys():
         output_diff['input_params'][k].append(params['v1'][k])
-    
+
     return output_diff
 
 
@@ -652,17 +652,17 @@ def max_percentage_diff(x1, y1, x2, y2, ref_x1, ref_y1, ref_x2, ref_y2):
     If there is a reference model,
     subtract its percentage diffs.
     """
-    
+
     #Compute the minimum and maximum values of x
     xmin = max(min(x1),min(x2),min(ref_x1),min(ref_x2))
     xmax = min(max(x1),max(x2),max(ref_x1),max(ref_x2))
-    
+
     #Interpolate linearly for all the data
     data1 = interpolate.interp1d(x1,y1)
     data2 = interpolate.interp1d(x2,y2)
     ref_data1 = interpolate.interp1d(ref_x1,ref_y1)
     ref_data2 = interpolate.interp1d(ref_x2,ref_y2)
-    
+
     #Initialise max_diff to 0.
     max_diff = 0.
     #Calculate the relative difference
@@ -682,7 +682,7 @@ def max_percentage_diff(x1, y1, x2, y2, ref_x1, ref_y1, ref_x2, ref_y2):
         #Store max value
         if tot_diff > max_diff:
             max_diff = tot_diff
-    
+
     return max_diff
 
 
@@ -690,10 +690,10 @@ def write_output_file(output_diff, folders, mode='all'):
     """
     Write the output table.
     """
-    
+
     array = []
     header = ''
-    
+
     #Number of column
     count = 1
     #Columns with the input parameters
@@ -702,7 +702,7 @@ def write_output_file(output_diff, folders, mode='all'):
         array.append(col)
         header = header + str(count) + ':' + var + '    '
         count = count + 1
-    
+
     #Columns with the output parameters
     for k in output_diff.keys():
         if 'input_params' not in k:
@@ -711,7 +711,7 @@ def write_output_file(output_diff, folders, mode='all'):
                 array.append(col)
                 header = header + str(count) + ':' + k + ':' + var + '    '
                 count = count + 1
-    
+
     #Transpose array
     array = np.transpose(array)
     #File name
@@ -722,7 +722,7 @@ def write_output_file(output_diff, folders, mode='all'):
 
     #Save file
     np.savetxt(fname, array, header=header, delimiter='    ', fmt='%10.5e')
-    
+
     return fname
 
 
@@ -731,33 +731,33 @@ def read_output_table(fname):
     Read output file and return a dictionary
     with all the values.
     """
-    
+
     #Initialise dictionary
     data_plots = {}
-    
+
     try:
         with open(fname,'r') as f:
             header = f.readline()
             table = np.loadtxt(fname)
     except:
         raise IOError('--------> Output table not found!')
-    
+
     #Divide headers
     header = header.strip('#')
     header = header.strip('\n')
     header = re.split('\d+:', header)
     header = [x.strip() for x in header]
     header = [x for x in header if x !='']
-    
+
     #Transpose table
     table = np.transpose(table)
-    
+
     #Generate dictionary
     for n in range(len(header)):
         prefix = header[n].split(':')[0]
         if prefix in gv.X_VARS.keys():
             data_plots[header[n]] = table[n]
-    
+
     return data_plots
 
 
@@ -765,20 +765,20 @@ def generate_plots(data, data_ref, folder):
     """
     Generate and save scatter plots for all the output data
     """
-    
+
     for k in data.keys():
         x = range(1,len(data[k])+1)
         y = data[k]
-        
+
         #File name
         fname = folder + re.sub(':', '_', k) + '.pdf'
-        
+
         #x range
         delta_x = (max(x)-min(x))/40.
         x_min = min(x) - delta_x
         x_max = max(x) + delta_x
         plt.xlim(x_min,x_max)
-        
+
         #Generate labels
         plt.xlabel('N')
         plt.ylabel('diff. [%]')
@@ -786,12 +786,12 @@ def generate_plots(data, data_ref, folder):
             plt.title(k + '  (diff_ref = ' + '%.2e' % data_ref[k] + '%)')
         else:
             plt.title(k)
-        
+
         #Generate scatter plot
         plt.scatter(x, y, s=10)
         #Save plot
         plt.savefig(fname)
         #Close plot
         plt.close()
-    
+
     return
