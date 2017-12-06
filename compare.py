@@ -58,7 +58,7 @@ def run(args):
     params = fs.separate_fix_from_varying(params)
     
     #Start loop
-    for step in range(1,args.N+1):
+    for step in range(1, args.N+1):
     
         #Re-initialise output for v1 and v2
         output_data['v1'] = {}
@@ -154,11 +154,11 @@ def info(args):
     """
     
     #Output path
-    output_path = fs.folder_exists_or(args.output_dir, mod = 'error')
+    output_path = fs.folder_exists_or(args.output_dir, mod='error')
     #Table path
     table_path = output_path + output_path.split('/')[-2] + '_output.dat'
     #Plots path
-    plots_path = fs.folder_exists_or(output_path + 'plots/', mod = 'create')
+    plots_path = fs.folder_exists_or(output_path + 'plots/', mod='create')
     
     #Try to read output table, otherwise error
     try:
@@ -183,6 +183,8 @@ if __name__ == '__main__':
     args = fs.argument_parser()
     
     if args.mode == 'run':
+        sys.exit(run(args))
+    if args.mode == 'update':
         sys.exit(run(args))
     elif args.mode == 'info':
         sys.exit(info(args))

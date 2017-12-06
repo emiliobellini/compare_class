@@ -33,6 +33,7 @@ def argument_parser():
     'the plots, or "info", to just generate the plots.')
     
     run_parser = subparsers.add_parser('run')
+    update_parser = subparsers.add_parser('update')
     info_parser = subparsers.add_parser('info')
     
     #Arguments for 'run'
@@ -47,10 +48,15 @@ def argument_parser():
     help='Number of iterations (default = 1)')
     run_parser.add_argument('--want-plots', action='store_true',
     help='Generate plots from the output')
+    
+    #Arguments for update
+    update_parser.add_argument('input_file', type=str, help='Input file')
+    update_parser.add_argument('output_dir', type=str,
+    help='Folder where the output is stored')
 
     #Arguments for 'info'
     info_parser.add_argument('output_dir', type=str,
-    help='Folder where the output table is stored')
+    help='Folder where the output is stored')
 
     args = parser.parse_args()
     
